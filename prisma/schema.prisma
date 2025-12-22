@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
   provider = "prisma-client"
@@ -11,4 +6,93 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  
+  email     String   @unique
+  password  String
+
+  projects  Project[]  @relation("ProjectUsers")
+  tasks     Task[]
+  comments  Comment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+model Project {
+  id        String   @id @default(uuid())
+  name      String
+  description String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  ownerId   String
+  users     User[]   @relation("ProjectUsers")
+  statuses  Status[]
+  tasks     Task[]
+
+  @@map("projects")
+}
+
+model Status {
+  id        String   @id @default(uuid())
+  name      String
+  color     String
+  unicode   String
+  order Int
+
+  tasks Task[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("statuses")
+}
+
+model Task {
+  id        String   @id @default(uuid())
+  title     String
+  description String?
+  imageUrl  String?
+
+  startDate DateTime?
+  dueDate   DateTime?
+
+  assigneeId String?
+  assignee   User?    @relation(fields: [assigneeId], references: [id], onDelete: SetNull)
+
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  statusId String
+  status   Status   @relation(fields: [statusId], references: [id], onDelete: Cascade)
+
+  comments  Comment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@map("tasks")
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId String
+  user   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  taskId String
+  task   Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@map("comments")
 }
