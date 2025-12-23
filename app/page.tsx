@@ -45,21 +45,32 @@ async function getUserStats() {
         id: true,
         email: true,
         name: true,
+        githubUrl: true,
       },
     });
 
     return {
       count: userCount,
-      recentUsers: recentUsers.map((user) => ({
-        id: user.id,
-        name: user.name || user.email.split("@")[0],
-        initials: (user.name || user.email.split("@")[0])
-          .split(" ")
-          .map((n) => n[0])
-          .join("")
-          .toUpperCase()
-          .slice(0, 2),
-      })),
+      recentUsers: recentUsers.map((user) => {
+        // Extract GitHub username from URL if available
+        let githubAvatarUrl = null;
+        if (user.githubUrl) {
+          const githubUsername = user.githubUrl.split("/").pop();
+          githubAvatarUrl = `https://github.com/${githubUsername}.png?size=40`;
+        }
+
+        return {
+          id: user.id,
+          name: user.name || user.email.split("@")[0],
+          initials: (user.name || user.email.split("@")[0])
+            .split(" ")
+            .map((n) => n[0])
+            .join("")
+            .toUpperCase()
+            .slice(0, 2),
+          githubAvatarUrl,
+        };
+      }),
     };
   } catch (error) {
     console.error("Failed to fetch user stats:", error);
@@ -128,6 +139,20 @@ export default async function Home() {
                       "from-purple-500 to-pink-500",
                       "from-pink-500 to-orange-500",
                     ];
+
+                    // Use GitHub avatar if available, otherwise show initials
+                    if (user.githubAvatarUrl) {
+                      return (
+                        <img
+                          key={user.id}
+                          src={user.githubAvatarUrl}
+                          alt={user.name}
+                          title={user.name}
+                          className="h-7 w-7 rounded-full border-2 border-background shadow-sm"
+                        />
+                      );
+                    }
+
                     return (
                       <div
                         key={user.id}

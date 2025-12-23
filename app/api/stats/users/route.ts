@@ -15,21 +15,32 @@ export async function GET() {
         id: true,
         email: true,
         name: true,
+        githubUrl: true,
       },
     });
 
     return NextResponse.json({
       count: userCount,
-      recentUsers: recentUsers.map((user) => ({
-        id: user.id,
-        name: user.name || user.email.split("@")[0],
-        initials: (user.name || user.email.split("@")[0])
-          .split(" ")
-          .map((n) => n[0])
-          .join("")
-          .toUpperCase()
-          .slice(0, 2),
-      })),
+      recentUsers: recentUsers.map((user) => {
+        // Extract GitHub username from URL if available
+        let githubAvatarUrl = null;
+        if (user.githubUrl) {
+          const githubUsername = user.githubUrl.split("/").pop();
+          githubAvatarUrl = `https://github.com/${githubUsername}.png?size=40`;
+        }
+
+        return {
+          id: user.id,
+          name: user.name || user.email.split("@")[0],
+          initials: (user.name || user.email.split("@")[0])
+            .split(" ")
+            .map((n) => n[0])
+            .join("")
+            .toUpperCase()
+            .slice(0, 2),
+          githubAvatarUrl,
+        };
+      }),
     });
   } catch (error) {
     console.error("Error fetching user count:", error);
