@@ -37,7 +37,7 @@ export function ManageUsersDialog({
   const inviteUser = useInviteUser(projectId);
   const removeUser = useRemoveUserFromProject(projectId);
 
-  const isOwner = project?.ownerId === currentUser?.userId;
+  const isOwner = project?.ownerId === currentUser?.id;
 
   const handleInviteUser = async (e: React.FormEvent) => {
     e.preventDefault();
