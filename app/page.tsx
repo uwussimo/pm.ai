@@ -9,7 +9,26 @@ import {
   Zap,
   Shield,
   CheckCircle2,
+  Star,
+  GithubIcon,
 } from "lucide-react";
+
+async function getGitHubStars() {
+  try {
+    const res = await fetch("https://api.github.com/repos/uwussimo/pm.ai", {
+      headers: {
+        Accept: "application/vnd.github.v3+json",
+      },
+      next: { revalidate: 3600 }, // Cache for 1 hour
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.stargazers_count;
+  } catch (error) {
+    console.error("Failed to fetch GitHub stars:", error);
+    return null;
+  }
+}
 
 export default async function Home() {
   const session = await getSession();
@@ -17,6 +36,8 @@ export default async function Home() {
   if (session?.userId) {
     redirect("/dashboard");
   }
+
+  const stars = await getGitHubStars();
 
   return (
     <div className="min-h-screen bg-[#FBFBFD]">
@@ -54,13 +75,27 @@ export default async function Home() {
             Keep your team aligned with a clean, focused workspace designed for
             clarity and speed
           </p>
-          <div className="pt-4">
+          <div className="pt-4 flex items-center justify-center gap-3">
             <Link href="/signup">
               <Button size="lg" className="text-base h-12 px-8 gap-2">
                 Start for free
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
+            <a
+              href="https://github.com/uwussimo/pm.ai"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-6 h-12 rounded-md border bg-background text-[15px] font-medium transition-colors hover:bg-muted"
+            >
+              <GithubIcon className="h-4 w-4" />
+              <span>Star on GitHub</span>
+              {stars !== null && (
+                <span className="inline-flex items-center justify-center min-w-[24px] h-5 px-1.5 rounded-full bg-[#1D1D1F] text-white text-[11px] font-semibold">
+                  {stars}+
+                </span>
+              )}
+            </a>
           </div>
         </div>
       </section>
@@ -110,8 +145,8 @@ export default async function Home() {
                 Built for speed
               </h3>
               <p className="text-[17px] leading-[1.5] text-[#86868B]">
-                Fast, responsive interface that keeps up with your workflow.
-                No lag, no friction, just work
+                Fast, responsive interface that keeps up with your workflow. No
+                lag, no friction, just work
               </p>
             </div>
           </div>
@@ -126,8 +161,8 @@ export default async function Home() {
                 Secure by design
               </h3>
               <p className="text-[17px] leading-[1.5] text-[#86868B]">
-                Your data is protected with enterprise-grade security.
-                Focus on your work, not on worry
+                Your data is protected with enterprise-grade security. Focus on
+                your work, not on worry
               </p>
             </div>
           </div>
@@ -184,8 +219,26 @@ export default async function Home() {
       <footer className="border-t">
         <div className="container mx-auto px-6 py-8 max-w-[980px]">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p className="text-sm text-[#86868B]">© 2024 PM. All rights reserved.</p>
+            <p className="text-sm text-[#86868B]">
+              © 2024 PM. All rights reserved.
+            </p>
             <div className="flex items-center gap-6">
+              <a
+                href="https://github.com/uwussimo/pm.ai"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-[#86868B] hover:text-[#1D1D1F] transition-colors"
+              >
+                GitHub
+              </a>
+              <a
+                href="https://github.com/uwussimo/pm.ai/issues"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-[#86868B] hover:text-[#1D1D1F] transition-colors"
+              >
+                Support
+              </a>
               <Link
                 href="/signin"
                 className="text-sm text-[#86868B] hover:text-[#1D1D1F] transition-colors"
