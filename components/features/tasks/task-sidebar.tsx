@@ -84,14 +84,16 @@ export function TaskSidebar({
   const [activeTab, setActiveTab] = useState<"write" | "preview">("write");
 
   // Sync form with task data when task loads
-  if (task && task.title !== title) {
-    setTitle(task.title);
-    setDescription(task.description || "");
-    setSelectedStatusId(task.statusId);
-    setAssigneeId(task.assigneeId || "");
-    setStartDate(task.startDate ? task.startDate.split("T")[0] : "");
-    setDueDate(task.dueDate ? task.dueDate.split("T")[0] : "");
-  }
+  useEffect(() => {
+    if (task) {
+      setTitle(task.title);
+      setDescription(task.description || "");
+      setSelectedStatusId(task.statusId);
+      setAssigneeId(task.assigneeId || "");
+      setStartDate(task.startDate ? task.startDate.split("T")[0] : "");
+      setDueDate(task.dueDate ? task.dueDate.split("T")[0] : "");
+    }
+  }, [task?.id]); // Only re-sync when task ID changes
 
   const handleDelete = () => {
     modal.confirm({

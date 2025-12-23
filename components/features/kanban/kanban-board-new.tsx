@@ -189,7 +189,7 @@ function TaskCard({
         {/* Card Content */}
         <div className="p-3 space-y-2">
           {/* Title */}
-          <h4 className="font-medium text-[13px] leading-snug text-foreground line-clamp-3 pr-1">
+          <h4 className="text-lg text-foreground font-medium line-clamp-3 pr-1">
             {task.title}
           </h4>
 
