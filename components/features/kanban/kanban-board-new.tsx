@@ -56,7 +56,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import { Calendar } from "@/components/ui/calendar";
 import { UserAvatar, getUserDisplayName } from "@/components/ui/user-avatar";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useUpdateTask, useCreateTask } from "@/lib/hooks/use-tasks";
@@ -106,11 +105,13 @@ function TaskCard({
   onClick,
   projectUsers,
   projectId,
+  isDraggingAny,
 }: {
   task: Task;
   onClick: () => void;
   projectUsers: User[];
   projectId: string;
+  isDraggingAny: boolean;
 }) {
   const {
     attributes,
@@ -123,15 +124,14 @@ function TaskCard({
 
   const updateTask = useUpdateTask(task.id, projectId);
   const [assigneePopoverOpen, setAssigneePopoverOpen] = React.useState(false);
-  const [dueDatePopoverOpen, setDueDatePopoverOpen] = React.useState(false);
+  const dateInputRef = React.useRef<HTMLInputElement>(null);
 
-  // Close popovers when dragging starts
+  // Close popovers immediately when ANY card starts dragging
   React.useEffect(() => {
-    if (isDragging) {
+    if (isDraggingAny || isDragging) {
       setAssigneePopoverOpen(false);
-      setDueDatePopoverOpen(false);
     }
-  }, [isDragging]);
+  }, [isDraggingAny, isDragging]);
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -159,12 +159,7 @@ function TaskCard({
   };
 
   const handleDueDateChange = (date: string) => {
-    updateTask.mutate(
-      { dueDate: date },
-      {
-        onSuccess: () => setDueDatePopoverOpen(false),
-      }
-    );
+    updateTask.mutate({ dueDate: date });
   };
 
   return (
@@ -198,112 +193,61 @@ function TaskCard({
             {task.title}
           </h4>
 
-          {/* Description Preview */}
-          {task.description && (
+          {/* Description Preview - Hidden when dragging */}
+          {!isDragging && task.description && (
             <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
               {task.description.replace(/[#*_`\[\]]/g, "").slice(0, 100)}
             </p>
           )}
 
-          {/* Badges Row */}
-          <div className="flex flex-wrap items-center gap-1.5 pt-1">
-            {/* Due Date Badge with Quick Edit */}
-            {!isDragging && (
-              <Popover
-                open={dueDatePopoverOpen}
-                onOpenChange={setDueDatePopoverOpen}
-              >
-                <PopoverTrigger asChild>
-                  <button
-                    className={cn(
-                      "inline-flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium transition-colors",
-                      task.dueDate
-                        ? isOverdue
-                          ? "bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-500/20"
-                          : "bg-muted text-muted-foreground hover:bg-muted/80"
-                        : "bg-muted/50 text-muted-foreground/50 hover:bg-muted"
-                    )}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                    }}
-                    onPointerDown={(e) => {
-                      e.stopPropagation();
-                    }}
-                  >
-                    <CalendarIcon className="h-3 w-3" />
-                    <span>
-                      {task.dueDate
-                        ? (() => {
-                            try {
-                              const dateStr = task.dueDate.split("T")[0];
-                              const date = new Date(dateStr + "T00:00:00");
-                              return date.toLocaleDateString("en-US", {
-                                month: "short",
-                                day: "numeric",
-                              });
-                            } catch {
-                              return task.dueDate;
-                            }
-                          })()
-                        : "Due date"}
-                    </span>
-                  </button>
-                </PopoverTrigger>
-                <PopoverContent
-                  className="w-auto p-0 z-50"
-                  align="start"
+          {/* Badges Row - Hidden when dragging */}
+          {!isDragging && !isDraggingAny && (
+            <div className="flex flex-wrap items-center gap-2 pt-1">
+              {/* Due Date Badge with Native Picker */}
+              <div className="relative">
+                <input
+                  ref={dateInputRef}
+                  type="date"
+                  value={task.dueDate ? task.dueDate.split("T")[0] : ""}
+                  onChange={(e) => {
+                    handleDueDateChange(e.target.value);
+                  }}
                   onClick={(e) => e.stopPropagation()}
                   onPointerDown={(e) => e.stopPropagation()}
+                  className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                  style={{ zIndex: 10 }}
+                />
+                <button
+                  className={cn(
+                    "inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[13px] font-medium transition-colors pointer-events-none",
+                    task.dueDate
+                      ? isOverdue
+                        ? "bg-red-500/10 text-red-600 dark:text-red-400"
+                        : "bg-muted text-muted-foreground"
+                      : "bg-muted/50 text-muted-foreground/50"
+                  )}
                 >
-                  <div className="space-y-2 p-3">
-                    <p className="text-xs font-medium">Due date</p>
-                    <Calendar
-                      mode="single"
-                      selected={
-                        task.dueDate
-                          ? (() => {
-                              try {
-                                const dateStr = task.dueDate.split("T")[0];
-                                return new Date(dateStr + "T00:00:00");
-                              } catch {
-                                return undefined;
-                              }
-                            })()
-                          : undefined
-                      }
-                      onSelect={(date) => {
-                        if (date) {
-                          const year = date.getFullYear();
-                          const month = String(date.getMonth() + 1).padStart(
-                            2,
-                            "0"
-                          );
-                          const day = String(date.getDate()).padStart(2, "0");
-                          handleDueDateChange(`${year}-${month}-${day}`);
-                        }
-                      }}
-                      initialFocus
-                    />
-                    {task.dueDate && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="w-full h-8 text-xs"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDueDateChange("");
-                        }}
-                      >
-                        Remove due date
-                      </Button>
-                    )}
-                  </div>
-                </PopoverContent>
-              </Popover>
-            )}
+                  <CalendarIcon className="h-4 w-4" />
+                  <span>
+                    {task.dueDate
+                      ? (() => {
+                          try {
+                            const dateStr = task.dueDate.split("T")[0];
+                            const date = new Date(dateStr + "T00:00:00");
+                            return date.toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                            });
+                          } catch {
+                            return task.dueDate;
+                          }
+                        })()
+                      : "Due date"}
+                  </span>
+                </button>
+              </div>
 
-            {/* Assignee Badge with Quick Edit */}
-            {!isDragging && (
+              {/* Assignee Badge with Quick Edit */}
               <Popover
                 open={assigneePopoverOpen}
                 onOpenChange={setAssigneePopoverOpen}
@@ -311,7 +255,7 @@ function TaskCard({
                 <PopoverTrigger asChild>
                   <button
                     className={cn(
-                      "inline-flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium transition-colors",
+                      "inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[13px] font-medium transition-colors",
                       task.assignee
                         ? "bg-muted text-muted-foreground hover:bg-muted/80"
                         : "bg-muted/50 text-muted-foreground/50 hover:bg-muted"
@@ -332,10 +276,10 @@ function TaskCard({
                       <UserAvatar
                         user={task.assignee}
                         size="sm"
-                        className="h-3 w-3"
+                        className="h-4 w-4"
                       />
                     ) : (
-                      <User className="h-3 w-3" />
+                      <User className="h-4 w-4" />
                     )}
                     <span className="truncate max-w-[80px]">
                       {task.assignee
@@ -345,23 +289,25 @@ function TaskCard({
                   </button>
                 </PopoverTrigger>
                 <PopoverContent
-                  className="w-[200px] p-2 z-50"
+                  className="w-[240px] p-3 z-50"
                   align="start"
                   onClick={(e) => e.stopPropagation()}
                   onPointerDown={(e) => e.stopPropagation()}
                 >
                   <div className="space-y-1">
-                    <p className="text-xs font-medium px-2 py-1">Assign to</p>
+                    <p className="text-[13px] font-medium px-2 py-2 text-[#86868B]">
+                      Assign to
+                    </p>
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="w-full justify-start h-8 text-xs font-normal"
+                      className="w-full justify-start h-11 text-[15px] font-normal px-2"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleAssigneeChange("unassigned");
                       }}
                     >
-                      <User className="h-3 w-3 mr-2" />
+                      <User className="h-5 w-5 mr-3" />
                       Unassigned
                     </Button>
                     {projectUsers.map((user) => (
@@ -370,7 +316,7 @@ function TaskCard({
                         variant="ghost"
                         size="sm"
                         className={cn(
-                          "w-full justify-start h-8 text-xs font-normal",
+                          "w-full justify-start h-11 text-[15px] font-normal px-2",
                           task.assignee?.id === user.id && "bg-accent"
                         )}
                         onClick={(e) => {
@@ -381,7 +327,7 @@ function TaskCard({
                         <UserAvatar
                           user={user}
                           size="sm"
-                          className="h-3 w-3 mr-2"
+                          className="h-6 w-6 mr-3"
                         />
                         {getUserDisplayName(user)}
                       </Button>
@@ -389,16 +335,16 @@ function TaskCard({
                   </div>
                 </PopoverContent>
               </Popover>
-            )}
 
-            {/* Comments Badge */}
-            {task._count.comments > 0 && (
-              <div className="inline-flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium bg-muted text-muted-foreground">
-                <MessageSquare className="h-3 w-3" />
-                <span>{task._count.comments}</span>
-              </div>
-            )}
-          </div>
+              {/* Comments Badge */}
+              {task._count.comments > 0 && (
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[13px] font-medium bg-muted text-muted-foreground">
+                  <MessageSquare className="h-4 w-4" />
+                  <span>{task._count.comments}</span>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </Card>
     </div>
@@ -411,12 +357,14 @@ function KanbanColumn({
   projectUsers,
   projectId,
   onDelete,
+  isDraggingAny,
 }: {
   column: Column;
   onTaskClick: (taskId: string) => void;
   projectUsers: User[];
   projectId: string;
   onDelete: () => void;
+  isDraggingAny: boolean;
 }) {
   const { setNodeRef: setDroppableRef, isOver } = useDroppable({
     id: column.id,
@@ -554,6 +502,7 @@ function KanbanColumn({
               onClick={() => onTaskClick(task.id)}
               projectUsers={projectUsers}
               projectId={projectId}
+              isDraggingAny={isDraggingAny}
             />
           ))}
         </SortableContext>
@@ -617,6 +566,7 @@ export function KanbanBoard({
   const [originalColumnId, setOriginalColumnId] = React.useState<string | null>(
     null
   );
+  const [isDraggingAny, setIsDraggingAny] = React.useState(false);
 
   React.useEffect(() => {
     setColumns(initialColumns);
@@ -643,6 +593,7 @@ export function KanbanBoard({
 
   const handleDragStart = (event: DragStartEvent) => {
     const id = event.active.id as string;
+    setIsDraggingAny(true);
 
     // Check if we're dragging a column
     if (id.startsWith("column-")) {
@@ -771,6 +722,7 @@ export function KanbanBoard({
     const overId = over?.id as string;
 
     // Reset active state
+    setIsDraggingAny(false);
     setActiveId(null);
     setActiveType(null);
 
@@ -884,6 +836,7 @@ export function KanbanBoard({
               onTaskClick={onTaskClick}
               projectUsers={projectUsers}
               projectId={projectId}
+              isDraggingAny={isDraggingAny}
               onDelete={() => handleDeleteStatus(column.id)}
             />
           ))}
@@ -903,7 +856,7 @@ export function KanbanBoard({
                 <div className="flex flex-wrap items-center gap-1.5">
                   {activeTask.dueDate && (
                     <div className="inline-flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium bg-muted">
-                      <Calendar className="h-3 w-3" />
+                      <CalendarIcon className="h-3 w-3" />
                     </div>
                   )}
                   {activeTask._count.comments > 0 && (
