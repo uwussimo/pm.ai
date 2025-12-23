@@ -40,11 +40,11 @@ export default async function Home() {
   const stars = await getGitHubStars();
 
   return (
-    <div className="min-h-screen bg-[#FBFBFD]">
+    <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b bg-background/95 backdrop-blur">
         <div className="container mx-auto px-6 py-4 flex items-center justify-between max-w-[980px]">
-          <div className="text-xl font-semibold tracking-tight text-[#1D1D1F]">
+          <div className="text-xl font-semibold tracking-tight text-foreground">
             PM
           </div>
           <div className="flex items-center gap-3">
@@ -66,12 +66,12 @@ export default async function Home() {
       {/* Hero Section */}
       <section className="container mx-auto px-6 pt-24 pb-16 max-w-[980px]">
         <div className="text-center space-y-6">
-          <h1 className="text-[56px] font-semibold leading-[1.1] tracking-[-0.015em] text-[#1D1D1F]">
+          <h1 className="text-[56px] font-semibold leading-[1.1] tracking-[-0.015em] text-foreground">
             Project management
             <br />
             made simple
           </h1>
-          <p className="text-[21px] leading-[1.4] text-[#86868B] max-w-[600px] mx-auto">
+          <p className="text-[21px] leading-[1.4] text-muted-foreground max-w-[600px] mx-auto">
             Keep your team aligned with a clean, focused workspace designed for
             clarity and speed
           </p>
@@ -91,7 +91,7 @@ export default async function Home() {
               <GithubIcon className="h-4 w-4" />
               <span>Star on GitHub</span>
               {stars !== null && (
-                <span className="inline-flex items-center justify-center min-w-[24px] h-5 px-1.5 rounded-full bg-[#1D1D1F] text-white text-[11px] font-semibold">
+                <span className="inline-flex items-center justify-center min-w-[24px] h-5 px-1.5 rounded-full bg-foreground text-background text-[11px] font-semibold">
                   {stars}+
                 </span>
               )}
@@ -104,15 +104,15 @@ export default async function Home() {
       <section className="container mx-auto px-6 py-16 max-w-[980px]">
         <div className="grid gap-8">
           {/* Feature 1 */}
-          <div className="flex items-start gap-6 p-8 rounded-2xl border bg-background">
-            <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-[#1D1D1F] flex items-center justify-center">
-              <Layers className="h-6 w-6 text-white" />
+          <div className="flex items-start gap-6 p-8 rounded-2xl border bg-card">
+            <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-foreground dark:bg-white flex items-center justify-center">
+              <Layers className="h-6 w-6 text-background dark:text-primary-foreground" />
             </div>
             <div className="space-y-2">
-              <h3 className="text-[24px] font-semibold tracking-tight text-[#1D1D1F]">
+              <h3 className="text-[24px] font-semibold tracking-tight text-foreground">
                 Visual project boards
               </h3>
-              <p className="text-[17px] leading-[1.5] text-[#86868B]">
+              <p className="text-[17px] leading-[1.5] text-muted-foreground">
                 Organize work with intuitive kanban boards. Move tasks through
                 stages and track progress at a glance
               </p>
@@ -120,15 +120,15 @@ export default async function Home() {
           </div>
 
           {/* Feature 2 */}
-          <div className="flex items-start gap-6 p-8 rounded-2xl border bg-background">
-            <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-[#1D1D1F] flex items-center justify-center">
-              <Users className="h-6 w-6 text-white" />
+          <div className="flex items-start gap-6 p-8 rounded-2xl border bg-card">
+            <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-foreground dark:bg-primary flex items-center justify-center">
+              <Users className="h-6 w-6 text-background dark:text-primary-foreground" />
             </div>
             <div className="space-y-2">
-              <h3 className="text-[24px] font-semibold tracking-tight text-[#1D1D1F]">
+              <h3 className="text-[24px] font-semibold tracking-tight text-foreground">
                 Team collaboration
               </h3>
-              <p className="text-[17px] leading-[1.5] text-[#86868B]">
+              <p className="text-[17px] leading-[1.5] text-muted-foreground">
                 Invite team members, assign tasks, and keep everyone on the same
                 page with real-time updates
               </p>
@@ -136,15 +136,15 @@ export default async function Home() {
           </div>
 
           {/* Feature 3 */}
-          <div className="flex items-start gap-6 p-8 rounded-2xl border bg-background">
-            <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-[#1D1D1F] flex items-center justify-center">
-              <Zap className="h-6 w-6 text-white" />
+          <div className="flex items-start gap-6 p-8 rounded-2xl border bg-card">
+            <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-foreground dark:bg-primary flex items-center justify-center">
+              <Zap className="h-6 w-6 text-background dark:text-primary-foreground" />
             </div>
             <div className="space-y-2">
-              <h3 className="text-[24px] font-semibold tracking-tight text-[#1D1D1F]">
+              <h3 className="text-[24px] font-semibold tracking-tight text-foreground">
                 Built for speed
               </h3>
-              <p className="text-[17px] leading-[1.5] text-[#86868B]">
+              <p className="text-[17px] leading-[1.5] text-muted-foreground">
                 Fast, responsive interface that keeps up with your workflow. No
                 lag, no friction, just work
               </p>
@@ -152,15 +152,15 @@ export default async function Home() {
           </div>
 
           {/* Feature 4 */}
-          <div className="flex items-start gap-6 p-8 rounded-2xl border bg-background">
-            <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-[#1D1D1F] flex items-center justify-center">
-              <Shield className="h-6 w-6 text-white" />
+          <div className="flex items-start gap-6 p-8 rounded-2xl border bg-card">
+            <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-foreground dark:bg-primary flex items-center justify-center">
+              <Shield className="h-6 w-6 text-background dark:text-primary-foreground" />
             </div>
             <div className="space-y-2">
-              <h3 className="text-[24px] font-semibold tracking-tight text-[#1D1D1F]">
+              <h3 className="text-[24px] font-semibold tracking-tight text-foreground">
                 Secure by design
               </h3>
-              <p className="text-[17px] leading-[1.5] text-[#86868B]">
+              <p className="text-[17px] leading-[1.5] text-muted-foreground">
                 Your data is protected with enterprise-grade security. Focus on
                 your work, not on worry
               </p>
@@ -171,8 +171,8 @@ export default async function Home() {
 
       {/* What's Included */}
       <section className="container mx-auto px-6 py-16 max-w-[980px]">
-        <div className="rounded-2xl border bg-background p-12">
-          <h2 className="text-[28px] font-semibold tracking-tight text-[#1D1D1F] mb-8 text-center">
+        <div className="rounded-2xl border bg-card p-12">
+          <h2 className="text-[28px] font-semibold tracking-tight text-foreground mb-8 text-center">
             Everything you need
           </h2>
           <div className="grid sm:grid-cols-2 gap-x-12 gap-y-4 max-w-[600px] mx-auto">
@@ -187,8 +187,8 @@ export default async function Home() {
               "Real-time updates",
             ].map((feature) => (
               <div key={feature} className="flex items-center gap-3">
-                <CheckCircle2 className="h-5 w-5 text-[#1D1D1F] flex-shrink-0" />
-                <span className="text-[17px] text-[#1D1D1F]">{feature}</span>
+                <CheckCircle2 className="h-5 w-5 text-foreground flex-shrink-0" />
+                <span className="text-[17px] text-foreground">{feature}</span>
               </div>
             ))}
           </div>
@@ -198,10 +198,10 @@ export default async function Home() {
       {/* CTA Section */}
       <section className="container mx-auto px-6 py-20 max-w-[980px]">
         <div className="text-center space-y-6">
-          <h2 className="text-[48px] font-semibold leading-[1.1] tracking-[-0.015em] text-[#1D1D1F]">
+          <h2 className="text-[48px] font-semibold leading-[1.1] tracking-[-0.015em] text-foreground">
             Start building today
           </h2>
-          <p className="text-[19px] text-[#86868B]">
+          <p className="text-[19px] text-muted-foreground">
             No credit card required. Get started in seconds
           </p>
           <div className="pt-4">
@@ -219,7 +219,7 @@ export default async function Home() {
       <footer className="border-t">
         <div className="container mx-auto px-6 py-8 max-w-[980px]">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p className="text-sm text-[#86868B]">
+            <p className="text-sm text-muted-foreground">
               © 2024 PM. All rights reserved.
             </p>
             <div className="flex items-center gap-6">
@@ -227,7 +227,7 @@ export default async function Home() {
                 href="https://github.com/uwussimo/pm.ai"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sm text-[#86868B] hover:text-[#1D1D1F] transition-colors"
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
                 GitHub
               </a>
@@ -235,19 +235,19 @@ export default async function Home() {
                 href="https://github.com/uwussimo/pm.ai/issues"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sm text-[#86868B] hover:text-[#1D1D1F] transition-colors"
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
                 Support
               </a>
               <Link
                 href="/signin"
-                className="text-sm text-[#86868B] hover:text-[#1D1D1F] transition-colors"
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
                 Sign in
               </Link>
               <Link
                 href="/signup"
-                className="text-sm text-[#86868B] hover:text-[#1D1D1F] transition-colors"
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
                 Sign up
               </Link>
