@@ -191,7 +191,7 @@ export function TaskSidebar({
                       updateTask.mutate({ statusId: value });
                     }}
                   >
-                    <SelectTrigger className="h-10 w-auto border-0 px-3 hover:bg-muted focus:ring-0 text-[15px]">
+                    <SelectTrigger className="h-10 w-auto border-0 px-3 hover:bg-muted focus:ring-0 text-[15px] w-full">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="min-w-[200px]">
@@ -222,7 +222,7 @@ export function TaskSidebar({
                       updateTask.mutate({ assigneeId: newValue });
                     }}
                   >
-                    <SelectTrigger className="h-10 w-auto border-0 px-3 hover:bg-muted focus:ring-0 text-[15px]">
+                    <SelectTrigger className="h-10 w-full border-0 px-3 hover:bg-muted focus:ring-0 text-[15px]">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="min-w-[200px]">
@@ -260,7 +260,7 @@ export function TaskSidebar({
                         startDate: e.target.value || undefined,
                       });
                     }}
-                    className="h-8 w-auto border-0 px-2 hover:bg-muted focus-visible:ring-0 text-sm"
+                    className="h-8 w-full border-0 px-2 hover:bg-muted focus-visible:ring-0 text-sm"
                   />
                 </div>
 
@@ -280,7 +280,7 @@ export function TaskSidebar({
                       });
                     }}
                     className={cn(
-                      "h-8 w-auto border-0 px-2 hover:bg-muted focus-visible:ring-0 text-sm",
+                      "h-8 w-full border-0 px-2 hover:bg-muted focus-visible:ring-0 text-sm",
                       task.dueDate &&
                         (() => {
                           try {
