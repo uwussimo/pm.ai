@@ -437,28 +437,13 @@ function TaskCard({
 
           {/* Due Date */}
           <div
-            className="relative"
+            className="relative inline-block"
             onClick={(e) => e.stopPropagation()}
             onPointerDown={(e) => e.stopPropagation()}
           >
-            <input
-              ref={dateInputRef}
-              type="date"
-              value={task.dueDate ? task.dueDate.split("T")[0] : ""}
-              onChange={(e) => {
-                e.stopPropagation();
-                handleDueDateChange(e.target.value);
-              }}
-              onClick={(e) => e.stopPropagation()}
-              onPointerDown={(e) => e.stopPropagation()}
-              className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-              style={{ zIndex: 10 }}
-            />
             <button
-              onClick={(e) => e.stopPropagation()}
-              onPointerDown={(e) => e.stopPropagation()}
               className={cn(
-                "inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[13px] font-medium transition-colors pointer-events-none",
+                "inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[13px] font-medium transition-colors relative",
                 task.dueDate
                   ? isOverdue
                     ? "bg-red-50 text-red-700 hover:bg-red-100 dark:bg-red-950 dark:text-red-400"
@@ -476,6 +461,18 @@ function TaskCard({
                   })
                   : "No date"}
               </span>
+              <input
+                ref={dateInputRef}
+                type="date"
+                value={task.dueDate ? task.dueDate.split("T")[0] : ""}
+                onChange={(e) => {
+                  e.stopPropagation();
+                  handleDueDateChange(e.target.value);
+                }}
+                onClick={(e) => e.stopPropagation()}
+                onPointerDown={(e) => e.stopPropagation()}
+                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full rounded-md"
+              />
             </button>
           </div>
 

@@ -108,6 +108,7 @@ export const KanbanCard = <T extends KanbanItemProps = KanbanItemProps>({
     transition,
     transform,
     isDragging,
+    setActivatorNodeRef,
   } = useSortable({
     id,
   });
@@ -120,14 +121,39 @@ export const KanbanCard = <T extends KanbanItemProps = KanbanItemProps>({
 
   return (
     <>
-      <div style={style} {...listeners} {...attributes} ref={setNodeRef}>
+      <div style={style} {...attributes} ref={setNodeRef}>
         <Card
           className={cn(
-            'cursor-grab gap-4 rounded-md p-3 shadow-sm',
-            isDragging && 'pointer-events-none cursor-grabbing opacity-30',
+            'gap-4 rounded-md p-3 shadow-sm relative',
+            isDragging && 'cursor-grabbing opacity-30',
             className
           )}
         >
+          {/* Drag Handle */}
+          <div
+            {...listeners}
+            ref={setActivatorNodeRef}
+            className="absolute top-0 left-1/2 -translate-x-1/2 p-1.5 cursor-grab hover:bg-muted/50 rounded-b touch-none"
+            style={{ touchAction: 'none' }}
+          >
+            <svg
+              width="20"
+              height="16"
+              viewBox="0 0 20 16"
+              fill="currentColor"
+              className="text-muted-foreground/40"
+            >
+              <circle cx="5" cy="4" r="1.5" />
+              <circle cx="5" cy="8" r="1.5" />
+              <circle cx="5" cy="12" r="1.5" />
+              <circle cx="10" cy="4" r="1.5" />
+              <circle cx="10" cy="8" r="1.5" />
+              <circle cx="10" cy="12" r="1.5" />
+              <circle cx="15" cy="4" r="1.5" />
+              <circle cx="15" cy="8" r="1.5" />
+              <circle cx="15" cy="12" r="1.5" />
+            </svg>
+          </div>
           {children ?? <p className="m-0 font-medium text-sm">{name}</p>}
         </Card>
       </div>
@@ -135,11 +161,33 @@ export const KanbanCard = <T extends KanbanItemProps = KanbanItemProps>({
         <t.In>
           <Card
             className={cn(
-              'cursor-grab gap-4 rounded-md p-3 shadow-sm ring-2 ring-primary',
+              'gap-4 rounded-md p-3 shadow-sm ring-2 ring-primary relative',
               isDragging && 'cursor-grabbing',
               className
             )}
           >
+            {/* Drag Handle */}
+            <div
+              className="absolute top-0 left-1/2 -translate-x-1/2 p-1.5 cursor-grab hover:bg-muted/50 rounded-b"
+            >
+              <svg
+                width="20"
+                height="16"
+                viewBox="0 0 20 16"
+                fill="currentColor"
+                className="text-muted-foreground/40"
+              >
+                <circle cx="5" cy="4" r="1.5" />
+                <circle cx="5" cy="8" r="1.5" />
+                <circle cx="5" cy="12" r="1.5" />
+                <circle cx="10" cy="4" r="1.5" />
+                <circle cx="10" cy="8" r="1.5" />
+                <circle cx="10" cy="12" r="1.5" />
+                <circle cx="15" cy="4" r="1.5" />
+                <circle cx="15" cy="8" r="1.5" />
+                <circle cx="15" cy="12" r="1.5" />
+              </svg>
+            </div>
             {children ?? <p className="m-0 font-medium text-sm">{name}</p>}
           </Card>
         </t.In>
