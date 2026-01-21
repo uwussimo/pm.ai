@@ -331,6 +331,13 @@ function TaskCard({
     });
   };
 
+  const handleDateClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (dateInputRef.current) {
+      dateInputRef.current.showPicker();
+    }
+  };
+
   const handlePriorityChange = (priority: string) => {
     updateTask.mutate(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -436,14 +443,24 @@ function TaskCard({
           </DropdownMenu>
 
           {/* Due Date */}
-          <div
-            className="relative inline-block"
-            onClick={(e) => e.stopPropagation()}
-            onPointerDown={(e) => e.stopPropagation()}
-          >
+          <div className="inline-block">
+            <input
+              ref={dateInputRef}
+              type="date"
+              value={task.dueDate ? task.dueDate.split("T")[0] : ""}
+              onChange={(e) => {
+                e.stopPropagation();
+                handleDueDateChange(e.target.value);
+              }}
+              onClick={(e) => e.stopPropagation()}
+              className="sr-only"
+            />
             <button
+              type="button"
+              onClick={handleDateClick}
+              onPointerDown={(e) => e.stopPropagation()}
               className={cn(
-                "inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[13px] font-medium transition-colors relative",
+                "inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[13px] font-medium transition-colors cursor-pointer",
                 task.dueDate
                   ? isOverdue
                     ? "bg-red-50 text-red-700 hover:bg-red-100 dark:bg-red-950 dark:text-red-400"
@@ -461,18 +478,6 @@ function TaskCard({
                   })
                   : "No date"}
               </span>
-              <input
-                ref={dateInputRef}
-                type="date"
-                value={task.dueDate ? task.dueDate.split("T")[0] : ""}
-                onChange={(e) => {
-                  e.stopPropagation();
-                  handleDueDateChange(e.target.value);
-                }}
-                onClick={(e) => e.stopPropagation()}
-                onPointerDown={(e) => e.stopPropagation()}
-                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full rounded-md"
-              />
             </button>
           </div>
 
