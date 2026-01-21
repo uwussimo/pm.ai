@@ -1,50 +1,30 @@
 "use client";
 
-import React from "react";
+import React, { useMemo, useRef } from "react";
+import type { DragEndEvent } from "@dnd-kit/core";
 import {
-  DndContext,
-  DragOverlay,
-  closestCorners,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragStartEvent,
-  DragOverEvent,
-  DragEndEvent,
-  useDroppable,
-} from "@dnd-kit/core";
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-  horizontalListSortingStrategy,
-  useSortable,
-} from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import { Card } from "@/components/ui/card";
+  KanbanProvider,
+  KanbanBoard,
+  KanbanHeader,
+  KanbanCards,
+  KanbanCard,
+} from "@/components/ui/shadcn-io/kanban";
 import { Button } from "@/components/ui/button";
 import {
   Plus,
   User,
   CalendarIcon,
   MessageSquare,
-  GripVertical,
   Trash2,
   MoreVertical,
   AlertCircle,
   ArrowUp,
   ArrowDown,
   Minus,
+  Pencil,
   Edit,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -54,7 +34,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { UserAvatar, getUserDisplayName } from "@/components/ui/user-avatar";
 import { useUpdateTask, useCreateTask } from "@/lib/hooks/use-tasks";
-import { useModal } from "@/lib/hooks/use-modal";
 
 interface KanbanTask {
   id: string;
@@ -98,497 +77,22 @@ interface KanbanBoardProps {
   onEditStatus?: (statusId: string) => void;
 }
 
-const PriorityIcon = ({ priority }: { priority: string }) => {
-  const icons: Record<string, { icon: React.ReactNode; className: string }> = {
-    urgent: {
-      icon: <AlertCircle className="h-3.5 w-3.5" />,
-      className: "text-red-600 dark:text-red-400",
-    },
-    high: {
-      icon: <ArrowUp className="h-3.5 w-3.5" />,
-      className: "text-orange-600 dark:text-orange-400",
-    },
-    medium: {
-      icon: <Minus className="h-3.5 w-3.5" />,
-      className: "text-yellow-600 dark:text-yellow-400",
-    },
-    low: {
-      icon: <ArrowDown className="h-3.5 w-3.5" />,
-      className: "text-blue-600 dark:text-blue-400",
-    },
-  };
-
-  const config = icons[priority] || icons.medium;
-  return <span className={config.className}>{config.icon}</span>;
+// Transform our data structure to match shadcn kanban API
+type KanbanItemData = KanbanTask & {
+  name: string; // required by shadcn
+  column: string; // required by shadcn
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [key: string]: any; // Allow additional properties
 };
 
-function TaskCard({
-  task,
-  onClick,
-  projectUsers,
-  projectId,
-  isDraggingAny,
-}: {
-  task: KanbanTask;
-  onClick: () => void;
-  projectUsers: User[];
-  projectId: string;
-  isDraggingAny: boolean;
-}) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: task.id });
+type KanbanColumnData = Column & {
+  name: string; // required by shadcn
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [key: string]: any; // Allow additional properties
+};
 
-  const updateTask = useUpdateTask(task.id, projectId);
-  const [assigneePopoverOpen, setAssigneePopoverOpen] = React.useState(false);
-  const dateInputRef = React.useRef<HTMLInputElement>(null);
-
-  // Close popovers immediately when ANY card starts dragging
-  React.useEffect(() => {
-    if (isDraggingAny || isDragging) {
-      setAssigneePopoverOpen(false);
-    }
-  }, [isDraggingAny, isDragging]);
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  };
-
-  const isOverdue =
-    task.dueDate &&
-    (() => {
-      try {
-        const dateStr = task.dueDate.split("T")[0];
-        return new Date(dateStr + "T00:00:00") < new Date();
-      } catch {
-        return false;
-      }
-    })();
-
-  const handleAssigneeChange = (userId: string) => {
-    updateTask.mutate(
-      { assigneeId: userId === "unassigned" ? "" : userId },
-      {
-        onSuccess: () => setAssigneePopoverOpen(false),
-      }
-    );
-  };
-
-  const handleDueDateChange = (date: string) => {
-    updateTask.mutate({ dueDate: date });
-  };
-
-  return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      {...attributes}
-      {...listeners}
-      className={cn("touch-none mb-2", isDragging && "opacity-50")}
-    >
-      <Card
-        className="group cursor-pointer hover:shadow-lg transition-all duration-200 bg-card border border-border/60 hover:border-border overflow-hidden py-2"
-        onClick={(e) => {
-          // Only trigger if not clicking on specific interactive elements
-          const target = e.target as HTMLElement;
-          // Don't trigger if clicking on buttons, inputs, or popover content
-          if (
-            !target.closest("button") &&
-            !target.closest("input") &&
-            !target.closest('[role="dialog"]') &&
-            !target.closest("[data-radix-popper-content-wrapper]")
-          ) {
-            onClick();
-          }
-        }}
-      >
-        {/* Card Content */}
-        <div className="p-3 space-y-2">
-          {/* Title with Priority */}
-          <div className="flex items-start gap-2">
-            <div className="mt-0.5">
-              <PriorityIcon priority={task.priority} />
-            </div>
-            <h4 className="text-lg text-foreground font-medium line-clamp-3 flex-1">
-              {task.title}
-            </h4>
-          </div>
-
-          {/* Description Preview - Hidden when dragging */}
-          {!isDragging && task.description && (
-            <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
-              {task.description.replace(/[#*_`\[\]]/g, "").slice(0, 100)}
-            </p>
-          )}
-
-          {/* Badges Row - Hidden when dragging */}
-          {!isDragging && !isDraggingAny && (
-            <div className="flex flex-wrap items-center gap-2 pt-1">
-              {/* Due Date Badge with Native Picker */}
-              <div className="relative cursor-pointer">
-                <input
-                  ref={dateInputRef}
-                  type="date"
-                  value={task.dueDate ? task.dueDate.split("T")[0] : ""}
-                  onChange={(e) => {
-                    handleDueDateChange(e.target.value);
-                  }}
-                  onClick={(e) => e.stopPropagation()}
-                  onPointerDown={(e) => e.stopPropagation()}
-                  className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
-                />
-                <div
-                  className={cn(
-                    "inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[13px] font-medium transition-colors",
-                    task.dueDate
-                      ? isOverdue
-                        ? "bg-red-500/10 text-red-600 dark:text-red-400"
-                        : "bg-muted text-muted-foreground"
-                      : "bg-muted/50 text-muted-foreground/50"
-                  )}
-                >
-                  <CalendarIcon className="h-4 w-4" />
-                  <span>
-                    {task.dueDate
-                      ? (() => {
-                        try {
-                          const dateStr = task.dueDate.split("T")[0];
-                          const date = new Date(dateStr + "T00:00:00");
-                          return date.toLocaleDateString("en-US", {
-                            month: "short",
-                            day: "numeric",
-                          });
-                        } catch {
-                          return task.dueDate;
-                        }
-                      })()
-                      : "Due date"}
-                  </span>
-                </div>
-              </div>
-
-              {/* Assignee Badge with Quick Edit */}
-              <Popover
-                open={assigneePopoverOpen}
-                onOpenChange={setAssigneePopoverOpen}
-              >
-                <PopoverTrigger asChild>
-                  <button
-                    className={cn(
-                      "inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[13px] font-medium transition-colors",
-                      task.assignee
-                        ? "bg-muted text-muted-foreground hover:bg-muted/80"
-                        : "bg-muted/50 text-muted-foreground/50 hover:bg-muted"
-                    )}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                    }}
-                    onPointerDown={(e) => {
-                      e.stopPropagation();
-                    }}
-                    title={
-                      task.assignee
-                        ? getUserDisplayName(task.assignee)
-                        : "Assign"
-                    }
-                  >
-                    {task.assignee ? (
-                      <UserAvatar
-                        user={task.assignee}
-                        size="sm"
-                        className="h-4 w-4"
-                      />
-                    ) : (
-                      <User className="h-4 w-4" />
-                    )}
-                    <span className="truncate max-w-[80px]">
-                      {task.assignee
-                        ? getUserDisplayName(task.assignee)
-                        : "Assign"}
-                    </span>
-                  </button>
-                </PopoverTrigger>
-                <PopoverContent
-                  className="w-[240px] p-3 z-50"
-                  align="start"
-                  onClick={(e) => e.stopPropagation()}
-                  onPointerDown={(e) => e.stopPropagation()}
-                >
-                  <div className="space-y-1">
-                    <p className="text-[13px] font-medium px-2 py-2 text-[#86868B]">
-                      Assign to
-                    </p>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-full justify-start h-11 text-[15px] font-normal px-2"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleAssigneeChange("unassigned");
-                      }}
-                    >
-                      <User className="h-5 w-5 mr-3" />
-                      Unassigned
-                    </Button>
-                    {projectUsers.map((user) => (
-                      <Button
-                        key={user.id}
-                        variant="ghost"
-                        size="sm"
-                        className={cn(
-                          "w-full justify-start h-11 text-[15px] font-normal px-2",
-                          task.assignee?.id === user.id && "bg-accent"
-                        )}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleAssigneeChange(user.id);
-                        }}
-                      >
-                        <UserAvatar
-                          user={user}
-                          size="sm"
-                          className="h-6 w-6 mr-3"
-                        />
-                        {getUserDisplayName(user)}
-                      </Button>
-                    ))}
-                  </div>
-                </PopoverContent>
-              </Popover>
-
-              {/* Comments Badge */}
-              {task._count.comments > 0 && (
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[13px] font-medium bg-muted text-muted-foreground">
-                  <MessageSquare className="h-4 w-4" />
-                  <span>{task._count.comments}</span>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </Card>
-    </div>
-  );
-}
-
-function KanbanColumn({
-  column,
-  onTaskClick,
-  projectUsers,
-  projectId,
-  onDelete,
-  onEdit,
-  isDraggingAny,
-}: {
-  column: Column;
-  onTaskClick: (taskId: string) => void;
-  projectUsers: User[];
-  projectId: string;
-  onDelete: () => void;
-  onEdit?: (statusId: string) => void;
-  isDraggingAny: boolean;
-}) {
-  const { setNodeRef: setDroppableRef, isOver } = useDroppable({
-    id: column.id,
-  });
-
-  const {
-    attributes,
-    listeners,
-    setNodeRef: setSortableRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({
-    id: `column-${column.id}`,
-    data: { type: "column", column },
-  });
-
-  const createTask = useCreateTask(projectId);
-  const [isAdding, setIsAdding] = React.useState(false);
-  const [newTaskTitle, setNewTaskTitle] = React.useState("");
-  const inputRef = React.useRef<HTMLInputElement>(null);
-  const modal = useModal();
-
-  React.useEffect(() => {
-    if (isAdding && inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [isAdding]);
-
-  const handleCreateTask = () => {
-    if (!newTaskTitle.trim()) {
-      setIsAdding(false);
-      setNewTaskTitle("");
-      return;
-    }
-
-    createTask.mutate(
-      {
-        title: newTaskTitle.trim(),
-        statusId: column.id,
-      },
-      {
-        onSuccess: () => {
-          setNewTaskTitle("");
-          setIsAdding(false);
-        },
-      }
-    );
-  };
-
-  const handleCancel = () => {
-    setIsAdding(false);
-    setNewTaskTitle("");
-  };
-
-  const handleDelete = () => {
-    modal.confirm({
-      title: "Delete Status?",
-      description: `Are you sure you want to delete "${column.name}"? All tasks in this status will be deleted.`,
-      confirmText: "Delete",
-      variant: "destructive",
-      onConfirm: onDelete,
-    });
-  };
-
-  const columnStyle = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  };
-
-  return (
-    <div
-      ref={setSortableRef}
-      style={columnStyle}
-      className={cn(
-        "flex-shrink-0 w-[280px] flex flex-col min-h-screen",
-        isDragging && "opacity-50"
-      )}
-    >
-      {/* Column Header */}
-      <div className="flex items-center justify-between mb-2 px-2 py-2 rounded-t-lg">
-        <div className="flex items-center gap-2 flex-1 min-w-0">
-          <button
-            className="cursor-grab active:cursor-grabbing touch-none"
-            {...attributes}
-            {...listeners}
-          >
-            <GripVertical className="h-4 w-4 text-muted-foreground hover:text-foreground transition-colors" />
-          </button>
-          <span className="text-lg flex-shrink-0">{column.unicode}</span>
-          <h3 className="font-semibold text-sm text-foreground truncate">
-            {column.name}
-          </h3>
-          <span className="px-1.5 py-0.5 rounded text-xs font-medium text-muted-foreground flex-shrink-0">
-            {column.tasks.length}
-          </span>
-        </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-7 w-7">
-              <MoreVertical className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {onEdit && (
-              <DropdownMenuItem onClick={() => onEdit(column.id)}>
-                <Edit className="h-4 w-4 mr-2" />
-                Edit status
-              </DropdownMenuItem>
-            )}
-            <DropdownMenuItem
-              onClick={handleDelete}
-              className="text-destructive focus:text-destructive"
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              Delete status
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-
-      {/* Tasks Container */}
-      <div
-        ref={setDroppableRef}
-        style={{
-          backgroundColor: isOver ? `${column.color}15` : `${column.color}08`,
-        }}
-        className={cn(
-          "flex-1 overflow-y-auto px-2 py-1 rounded-lg transition-all duration-200 min-h-[500px] border-2",
-          isOver
-            ? "border-primary shadow-lg scale-[1.02]"
-            : "border-transparent"
-        )}
-      >
-        <SortableContext
-          items={column.tasks.map((t) => t.id)}
-          strategy={verticalListSortingStrategy}
-        >
-          {column.tasks.map((task) => (
-            <TaskCard
-              key={task.id}
-              task={task}
-              onClick={() => onTaskClick(task.id)}
-              projectUsers={projectUsers}
-              projectId={projectId}
-              isDraggingAny={isDraggingAny}
-            />
-          ))}
-        </SortableContext>
-
-        {/* Inline Add Task */}
-        {isAdding ? (
-          <div className="mt-2 space-y-2">
-            <Input
-              ref={inputRef}
-              value={newTaskTitle}
-              onChange={(e) => setNewTaskTitle(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  handleCreateTask();
-                } else if (e.key === "Escape") {
-                  e.preventDefault();
-                  handleCancel();
-                }
-              }}
-              onBlur={handleCancel}
-              placeholder="Enter task title..."
-              className="h-9 text-sm"
-              disabled={createTask.isPending}
-            />
-            <p className="text-xs text-muted-foreground px-1">
-              Press Enter to add • Esc to cancel
-            </p>
-          </div>
-        ) : (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-full h-8 mt-2 justify-start text-xs text-muted-foreground hover:bg-accent hover:text-foreground"
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsAdding(true);
-            }}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add task
-          </Button>
-        )}
-      </div>
-    </div>
-  );
-}
-
-export function KanbanBoard({
-  columns: initialColumns,
+export function KanbanBoardNew({
+  columns,
   projectUsers,
   projectId,
   onTaskMove,
@@ -596,368 +100,517 @@ export function KanbanBoard({
   onAddStatus,
   onEditStatus,
 }: KanbanBoardProps) {
-  const [columns, setColumns] = React.useState(initialColumns);
-  const [activeId, setActiveId] = React.useState<string | null>(null);
-  const [activeType, setActiveType] = React.useState<"task" | "column" | null>(
-    null
-  );
-  const [originalColumnId, setOriginalColumnId] = React.useState<string | null>(
-    null
-  );
-  const [isDraggingAny, setIsDraggingAny] = React.useState(false);
-
-  React.useEffect(() => {
-    setColumns(initialColumns);
-  }, [initialColumns]);
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
+  // Transform columns and tasks to shadcn format
+  const kanbanColumns: KanbanColumnData[] = useMemo(
+    () =>
+      columns.map((col) => ({
+        ...col,
+        name: col.name,
+      })),
+    [columns]
   );
 
-  const findTask = (id: string) => {
-    for (const column of columns) {
-      const task = column.tasks.find((t) => t.id === id);
-      if (task) return { task, columnId: column.id };
-    }
-    return null;
-  };
-
-  const handleDragStart = (event: DragStartEvent) => {
-    const id = event.active.id as string;
-    setIsDraggingAny(true);
-
-    // Check if we're dragging a column
-    if (id.startsWith("column-")) {
-      setActiveType("column");
-      setActiveId(id.replace("column-", ""));
-    } else {
-      // Dragging a task
-      setActiveType("task");
-      setActiveId(id);
-      // Store the original column ID before any state changes
-      const taskData = findTask(id);
-      if (taskData) {
-        setOriginalColumnId(taskData.columnId);
-      }
-    }
-  };
-
-  const handleDragOver = (event: DragOverEvent) => {
-    const { active, over } = event;
-    if (!over) return;
-
-    // Handle column reordering
-    if (activeType === "column") {
-      const activeId = active.id as string;
-      const overId = over.id as string;
-
-      if (activeId.startsWith("column-") && overId.startsWith("column-")) {
-        const activeColumnId = activeId.replace("column-", "");
-        const overColumnId = overId.replace("column-", "");
-
-        if (activeColumnId === overColumnId) return;
-
-        setColumns((cols) => {
-          const oldIndex = cols.findIndex((c) => c.id === activeColumnId);
-          const newIndex = cols.findIndex((c) => c.id === overColumnId);
-          return arrayMove(cols, oldIndex, newIndex);
+  const kanbanData: KanbanItemData[] = useMemo(() => {
+    const allTasks: KanbanItemData[] = [];
+    columns.forEach((col) => {
+      col.tasks.forEach((task) => {
+        allTasks.push({
+          ...task,
+          name: task.title,
+          column: task.statusId,
         });
-      }
-      return;
-    }
-
-    // Handle task dragging
-    const activeId = active.id as string;
-    const overId = over.id as string;
-
-    // Check if we're over a column
-    const overColumn = columns.find((col) => col.id === overId);
-    if (overColumn) {
-      // Dragging over a column directly
-      const activeData = findTask(activeId);
-      if (!activeData) return;
-      if (activeData.columnId === overId) return;
-
-      setColumns((cols) => {
-        const newColumns = [...cols];
-        const activeColumnIndex = newColumns.findIndex(
-          (c) => c.id === activeData.columnId
-        );
-        const overColumnIndex = newColumns.findIndex((c) => c.id === overId);
-
-        const activeColumn = { ...newColumns[activeColumnIndex] };
-        const overColumn = { ...newColumns[overColumnIndex] };
-
-        activeColumn.tasks = activeColumn.tasks.filter(
-          (t) => t.id !== activeId
-        );
-
-        const task = findTask(activeId)?.task;
-        if (task) {
-          const updatedTask = { ...task, statusId: overId };
-          overColumn.tasks = [...overColumn.tasks, updatedTask];
-        }
-
-        newColumns[activeColumnIndex] = activeColumn;
-        newColumns[overColumnIndex] = overColumn;
-
-        return newColumns;
       });
-      return;
-    }
-
-    // Check if we're over another task
-    const activeData = findTask(activeId);
-    const overData = findTask(overId);
-
-    if (!activeData || !overData) return;
-    if (activeData.columnId === overData.columnId) return;
-
-    setColumns((cols) => {
-      const newColumns = [...cols];
-      const activeColumnIndex = newColumns.findIndex(
-        (c) => c.id === activeData.columnId
-      );
-      const overColumnIndex = newColumns.findIndex(
-        (c) => c.id === overData.columnId
-      );
-
-      const activeColumn = { ...newColumns[activeColumnIndex] };
-      const overColumn = { ...newColumns[overColumnIndex] };
-
-      activeColumn.tasks = activeColumn.tasks.filter((t) => t.id !== activeId);
-
-      const task = findTask(activeId)?.task;
-      if (task) {
-        const updatedTask = { ...task, statusId: overData.columnId };
-        const overTaskIndex = overColumn.tasks.findIndex(
-          (t) => t.id === overId
-        );
-        overColumn.tasks = [
-          ...overColumn.tasks.slice(0, overTaskIndex),
-          updatedTask,
-          ...overColumn.tasks.slice(overTaskIndex),
-        ];
-      }
-
-      newColumns[activeColumnIndex] = activeColumn;
-      newColumns[overColumnIndex] = overColumn;
-
-      return newColumns;
     });
+    return allTasks.sort((a, b) => a.order - b.order);
+  }, [columns]);
+
+  const handleDataChange = () => {
+    // This is called during drag operations
+    // We'll handle the actual update in onDragEnd
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-    const activeId = active.id as string;
-    const overId = over?.id as string;
 
-    // Reset active state
-    setIsDraggingAny(false);
-    setActiveId(null);
-    setActiveType(null);
-
-    if (!over) {
-      setOriginalColumnId(null);
+    if (!over || active.id === over.id) {
       return;
     }
 
-    // Handle column reordering
-    if (activeId.startsWith("column-") && overId.startsWith("column-")) {
-      const activeColumnId = activeId.replace("column-", "");
-      const overColumnId = overId.replace("column-", "");
+    const activeTask = kanbanData.find((item) => item.id === active.id);
+    const overTask = kanbanData.find((item) => item.id === over.id);
 
-      if (activeColumnId !== overColumnId) {
-        // Update column positions in the database
-        const newColumnOrder = columns.map((col) => col.id);
-        updateColumnPositions(newColumnOrder);
-      }
-      return;
-    }
+    if (!activeTask) return;
 
-    // Handle task movement
-    if (!originalColumnId) {
-      setOriginalColumnId(null);
-      return;
-    }
+    // Determine the target column
+    let targetStatusId = activeTask.statusId;
+    let newOrder = activeTask.order;
 
-    // Determine the target column and calculate new order
-    let targetColumnId: string | null = null;
-    let newOrder: number | undefined = undefined;
-
-    // Check if dropped directly on a column
-    const overColumn = columns.find((col) => col.id === overId);
-    if (overColumn) {
-      targetColumnId = overId;
-      // If dropped on empty column or bottom of column, put at end
-      newOrder = overColumn.tasks.length;
+    // Check if dropped on another task
+    if (overTask) {
+      targetStatusId = overTask.statusId;
+      newOrder = overTask.order;
     } else {
-      // Dropped on a task, find which column it belongs to and position
-      const overData = findTask(overId);
-      if (overData) {
-        targetColumnId = overData.columnId;
-        const targetColumn = columns.find((col) => col.id === targetColumnId);
-        if (targetColumn) {
-          const overTaskIndex = targetColumn.tasks.findIndex(
-            (t) => t.id === overId
-          );
-          // Get the actual order value from the task at that index, or use the index
-          newOrder = overTaskIndex >= 0
-            ? overTaskIndex
-            : targetColumn.tasks.length;
-        }
-      }
-    }
-
-    // If we found a target column, update the database
-    if (targetColumnId) {
-      // Only update if status changed or order changed within same column
-      const statusChanged = targetColumnId !== originalColumnId;
-      if (statusChanged || newOrder !== undefined) {
-        console.log(
-          `📤 Calling onTaskMove: ${activeId} from ${originalColumnId} to ${targetColumnId}, order: ${newOrder}`
+      // Dropped on a column (board)
+      const overColumn = kanbanColumns.find((col) => col.id === over.id);
+      if (overColumn) {
+        targetStatusId = overColumn.id;
+        // Find the max order in this column and add 1
+        const tasksInColumn = kanbanData.filter(
+          (t) => t.statusId === overColumn.id
         );
-        onTaskMove(activeId, targetColumnId, newOrder);
+        newOrder =
+          tasksInColumn.length > 0
+            ? Math.max(...tasksInColumn.map((t) => t.order)) + 1
+            : 0;
       }
     }
 
-    // Reset original column tracking
-    setOriginalColumnId(null);
+    // Call the parent handler
+    onTaskMove(activeTask.id, targetStatusId, newOrder);
   };
-
-  const updateColumnPositions = async (columnIds: string[]) => {
-    // Update each column's position in parallel
-    const updates = columnIds.map((columnId, index) =>
-      fetch(`/api/statuses/${columnId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ position: index }),
-      })
-    );
-
-    try {
-      await Promise.all(updates);
-      // Invalidate queries to refetch with new order
-      window.location.reload(); // Temporary solution to ensure order persists
-    } catch (error) {
-      console.error("Failed to update column positions:", error);
-    }
-  };
-
-  const handleDeleteStatus = async (statusId: string) => {
-    try {
-      const res = await fetch(`/api/statuses/${statusId}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) throw new Error("Failed to delete status");
-      // Refresh to update the UI
-      window.location.reload();
-    } catch (error) {
-      console.error("Failed to delete status:", error);
-    }
-  };
-
-  const activeTask =
-    activeId && activeType === "task" ? findTask(activeId)?.task : null;
-  const activeColumn =
-    activeId && activeType === "column"
-      ? columns.find((c) => c.id === activeId)
-      : null;
 
   return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={closestCorners}
-      onDragStart={handleDragStart}
-      onDragOver={handleDragOver}
-      onDragEnd={handleDragEnd}
-    >
-      <SortableContext
-        items={columns.map((c) => `column-${c.id}`)}
-        strategy={horizontalListSortingStrategy}
+    <div className="flex h-full overflow-x-auto gap-4 p-4">
+      <KanbanProvider
+        columns={kanbanColumns}
+        data={kanbanData}
+        onDataChange={handleDataChange}
+        onDragEnd={handleDragEnd}
+        className="flex gap-4 flex-shrink-0"
       >
-        <div className="flex gap-4 overflow-x-auto">
-          {columns.map((column) => (
-            <KanbanColumn
-              key={column.id}
-              column={column}
-              onTaskClick={onTaskClick}
-              projectUsers={projectUsers}
-              projectId={projectId}
-              isDraggingAny={isDraggingAny}
-              onDelete={() => handleDeleteStatus(column.id)}
-              onEdit={onEditStatus}
+        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+        {(column: any) => (
+          <KanbanBoard
+            key={column.id}
+            id={column.id}
+            className="w-[320px] flex-shrink-0 h-fit"
+          >
+            <ColumnHeader
+              column={column as KanbanColumnData}
+              onEdit={() => onEditStatus?.(column.id)}
             />
-          ))}
+            <KanbanCards id={column.id}>
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+              {(task: any) => (
+                <TaskCard
+                  key={task.id}
+                  task={task as KanbanItemData}
+                  projectUsers={projectUsers}
+                  projectId={projectId}
+                  onClick={() => onTaskClick(task.id)}
+                />
+              )}
+            </KanbanCards>
+            <AddTaskButton
+              columnId={column.id}
+              projectId={projectId}
+            />
+          </KanbanBoard>
+        )}
+      </KanbanProvider>
 
-          {/* Add Status Button */}
-          {onAddStatus && (
-            <div className="flex-shrink-0 w-[280px]">
+      {/* Add Status Button */}
+      {onAddStatus && (
+        <div className="flex-shrink-0 w-[320px]">
+          <Button
+            variant="outline"
+            className="w-full h-12 text-sm font-medium"
+            onClick={onAddStatus}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Status
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Column Header Component
+function ColumnHeader({
+  column,
+  onEdit,
+}: {
+  column: KanbanColumnData;
+  onEdit: () => void;
+}) {
+  const handleDelete = async () => {
+    try {
+      const response = await fetch(`/api/statuses/${column.id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete status");
+      }
+
+      window.location.reload();
+    } catch (error) {
+      console.error("Error deleting status:", error);
+    }
+  };
+
+  return (
+    <KanbanHeader className="flex items-center justify-between gap-2 bg-muted/50">
+      <div className="flex items-center gap-2 flex-1 min-w-0">
+        <span
+          className="flex-shrink-0 w-2 h-2 rounded-full"
+          style={{ backgroundColor: column.color }}
+        />
+        <span className="truncate font-semibold">
+          {column.unicode} {column.name}
+        </span>
+        <span className="text-muted-foreground ml-auto">
+          {column.tasks?.length || 0}
+        </span>
+      </div>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-6 w-6 p-0 flex-shrink-0"
+          >
+            <MoreVertical className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem
+            onClick={onEdit}
+            className="text-foreground focus:text-foreground"
+          >
+            <Pencil className="h-4 w-4 mr-2" />
+            Edit status
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={handleDelete}
+            className="text-destructive focus:text-destructive"
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            Delete status
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </KanbanHeader>
+  );
+}
+
+// Task Card Component
+function TaskCard({
+  task,
+  projectUsers,
+  projectId,
+  onClick,
+}: {
+  task: KanbanItemData;
+  projectUsers: User[];
+  projectId: string;
+  onClick: () => void;
+}) {
+  const updateTask = useUpdateTask(task.id, projectId);
+  const dateInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAssigneeChange = (userId: string) => {
+    updateTask.mutate({
+      assigneeId: userId === "unassigned" ? "" : userId,
+    });
+  };
+
+  const handleDueDateChange = (dateString: string) => {
+    if (!dateString) {
+      updateTask.mutate({
+        dueDate: "",
+      });
+      return;
+    }
+
+    const date = new Date(dateString);
+    date.setHours(23, 59, 59, 999);
+    updateTask.mutate({
+      dueDate: date.toISOString(),
+    });
+  };
+
+  const handlePriorityChange = (priority: string) => {
+    updateTask.mutate(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      { priority } as any
+    );
+  };
+
+  const getPriorityIcon = () => {
+    switch (task.priority) {
+      case "high":
+        return <ArrowUp className="h-3 w-3" />;
+      case "low":
+        return <ArrowDown className="h-3 w-3" />;
+      default:
+        return <Minus className="h-3 w-3" />;
+    }
+  };
+
+  const getPriorityColor = () => {
+    switch (task.priority) {
+      case "high":
+        return "text-red-600 bg-red-50 hover:bg-red-100 dark:bg-red-950 dark:text-red-400";
+      case "low":
+        return "text-blue-600 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950 dark:text-blue-400";
+      default:
+        return "text-gray-600 bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-400";
+    }
+  };
+
+  const isOverdue =
+    task.dueDate && new Date(task.dueDate) < new Date() ? true : false;
+
+  return (
+    <KanbanCard id={task.id} name={task.name} column={task.column}>
+      <div className="space-y-3">
+        {/* Title with Edit Icon */}
+        <div className="flex items-start justify-between gap-2">
+          <h4 className="font-medium text-sm leading-tight line-clamp-2 flex-1">
+            {task.title}
+          </h4>
+          <button
+            onClick={onClick}
+            className="flex-shrink-0 p-1 hover:bg-muted rounded transition-colors"
+            title="View task details"
+          >
+            <Edit className="h-3.5 w-3.5 text-muted-foreground" />
+          </button>
+        </div>
+
+        {/* Description */}
+        {task.description && (
+          <p className="text-xs text-muted-foreground line-clamp-2">
+            {task.description}
+          </p>
+        )}
+
+        {/* Metadata */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Priority */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
               <button
-                onClick={onAddStatus}
-                className="h-full min-h-[500px] w-full border-2 border-dashed border-muted-foreground/25 rounded-lg hover:border-primary/50 hover:bg-accent/50 transition-all flex flex-col items-center justify-center gap-3 text-muted-foreground hover:text-foreground"
+                onClick={(e) => e.stopPropagation()}
+                onPointerDown={(e) => e.stopPropagation()}
+                className={cn(
+                  "inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium transition-colors",
+                  getPriorityColor()
+                )}
               >
-                <Plus className="h-8 w-8" />
-                <span className="text-sm font-medium">Add Status</span>
+                {getPriorityIcon()}
+                <span className="capitalize">{task.priority}</span>
               </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" onClick={(e) => e.stopPropagation()}>
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handlePriorityChange("high");
+                }}
+              >
+                <ArrowUp className="h-4 w-4 mr-2 text-red-600" />
+                High
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handlePriorityChange("medium");
+                }}
+              >
+                <Minus className="h-4 w-4 mr-2 text-gray-600" />
+                Medium
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handlePriorityChange("low");
+                }}
+              >
+                <ArrowDown className="h-4 w-4 mr-2 text-blue-600" />
+                Low
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Due Date */}
+          <div
+            className="relative"
+            onClick={(e) => e.stopPropagation()}
+            onPointerDown={(e) => e.stopPropagation()}
+          >
+            <input
+              ref={dateInputRef}
+              type="date"
+              value={task.dueDate ? task.dueDate.split("T")[0] : ""}
+              onChange={(e) => {
+                e.stopPropagation();
+                handleDueDateChange(e.target.value);
+              }}
+              onClick={(e) => e.stopPropagation()}
+              onPointerDown={(e) => e.stopPropagation()}
+              className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+              style={{ zIndex: 10 }}
+            />
+            <button
+              onClick={(e) => e.stopPropagation()}
+              onPointerDown={(e) => e.stopPropagation()}
+              className={cn(
+                "inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[13px] font-medium transition-colors pointer-events-none",
+                task.dueDate
+                  ? isOverdue
+                    ? "bg-red-50 text-red-700 hover:bg-red-100 dark:bg-red-950 dark:text-red-400"
+                    : "bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-950 dark:text-blue-400"
+                  : "bg-muted text-muted-foreground hover:bg-muted/80"
+              )}
+            >
+              {isOverdue && <AlertCircle className="h-3.5 w-3.5" />}
+              <CalendarIcon className="h-3.5 w-3.5" />
+              <span className="text-xs">
+                {task.dueDate
+                  ? new Date(task.dueDate).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                  })
+                  : "No date"}
+              </span>
+            </button>
+          </div>
+
+          {/* Comments count */}
+          {task._count.comments > 0 && (
+            <div className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+              <MessageSquare className="h-3 w-3" />
+              <span>{task._count.comments}</span>
             </div>
           )}
         </div>
-      </SortableContext>
 
-      <DragOverlay>
-        {activeTask ? (
-          <Card className="w-[280px] cursor-grabbing rotate-2 shadow-2xl border-2 border-primary/30 bg-card p-4">
-            <div className="space-y-2">
-              <h4 className="font-medium text-[13px] leading-snug text-foreground line-clamp-2">
-                {activeTask.title}
-              </h4>
-              {(activeTask.assignee ||
-                activeTask.dueDate ||
-                activeTask._count.comments > 0) && (
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    {activeTask.dueDate && (
-                      <div className="inline-flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium bg-muted">
-                        <CalendarIcon className="h-3 w-3" />
-                      </div>
-                    )}
-                    {activeTask._count.comments > 0 && (
-                      <div className="inline-flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium bg-muted">
-                        <MessageSquare className="h-3 w-3" />
-                        <span>{activeTask._count.comments}</span>
-                      </div>
-                    )}
-                    {activeTask.assignee && (
-                      <div className="inline-flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium bg-muted">
-                        <User className="h-3 w-3" />
-                      </div>
-                    )}
-                  </div>
+        {/* Assignee */}
+        <div className="flex items-center gap-2 pt-1">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                onClick={(e) => e.stopPropagation()}
+                onPointerDown={(e) => e.stopPropagation()}
+                className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+              >
+                {task.assignee ? (
+                  <>
+                    <UserAvatar user={task.assignee} size="sm" />
+                    <span className="text-xs font-medium truncate max-w-[120px]">
+                      {getUserDisplayName(task.assignee)}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center">
+                      <User className="h-3 w-3 text-muted-foreground" />
+                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      Unassigned
+                    </span>
+                  </>
                 )}
-            </div>
-          </Card>
-        ) : null}
-        {activeColumn && (
-          <div className="w-[280px] opacity-90 cursor-grabbing rotate-2">
-            <div className="bg-muted/50 rounded-lg p-3 border-2 border-primary">
-              <div className="flex items-center gap-2">
-                <span className="text-lg">{activeColumn.unicode}</span>
-                <h3 className="font-semibold text-sm">{activeColumn.name}</h3>
-                <span className="px-1.5 py-0.5 rounded text-xs font-medium bg-background/50">
-                  {activeColumn.tasks.length}
-                </span>
-              </div>
-            </div>
-          </div>
-        )}
-      </DragOverlay>
-    </DndContext>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" onClick={(e) => e.stopPropagation()}>
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleAssigneeChange("unassigned");
+                }}
+              >
+                <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center mr-2">
+                  <User className="h-3 w-3 text-muted-foreground" />
+                </div>
+                Unassigned
+              </DropdownMenuItem>
+              {projectUsers.map((user) => (
+                <DropdownMenuItem
+                  key={user.id}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleAssigneeChange(user.id);
+                  }}
+                >
+                  <UserAvatar user={user} size="sm" className="mr-2" />
+                  {getUserDisplayName(user)}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+    </KanbanCard>
+  );
+}
+
+// Add Task Button Component
+function AddTaskButton({
+  columnId,
+  projectId,
+}: {
+  columnId: string;
+  projectId: string;
+}) {
+  const [isAdding, setIsAdding] = React.useState(false);
+  const [newTaskTitle, setNewTaskTitle] = React.useState("");
+  const createTask = useCreateTask(projectId);
+
+  const handleAddTask = async () => {
+    if (!newTaskTitle.trim()) return;
+
+    try {
+      await createTask.mutateAsync({
+        title: newTaskTitle,
+        statusId: columnId,
+      });
+      setNewTaskTitle("");
+      setIsAdding(false);
+    } catch (error) {
+      console.error("Error creating task:", error);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleAddTask();
+    } else if (e.key === "Escape") {
+      setIsAdding(false);
+      setNewTaskTitle("");
+    }
+  };
+
+  if (isAdding) {
+    return (
+      <div className="p-2">
+        <Input
+          autoFocus
+          value={newTaskTitle}
+          onChange={(e) => setNewTaskTitle(e.target.value)}
+          onKeyDown={handleKeyDown}
+          onBlur={handleAddTask}
+          placeholder="Enter task title..."
+          className="text-sm"
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-2">
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => setIsAdding(true)}
+        className="w-full justify-start text-muted-foreground hover:text-foreground"
+      >
+        <Plus className="h-4 w-4 mr-2" />
+        Add task
+      </Button>
+    </div>
   );
 }

@@ -23,7 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { KanbanBoard } from "@/components/features/kanban/kanban-board-new";
+import { KanbanBoardNew } from "@/components/features/kanban/kanban-board-new";
 import { TaskGridView } from "@/components/features/kanban/task-grid-view";
 import { getUserDisplayName } from "@/components/ui/user-avatar";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
@@ -39,6 +39,7 @@ import { useAuth } from "@/lib/hooks/use-auth";
 import { PresenceAvatars } from "@/components/features/collaboration/presence-avatars";
 import { CursorCanvas } from "@/components/features/collaboration/cursor-canvas";
 import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 interface ProjectBoardProps {
   projectId: string;
@@ -234,19 +235,36 @@ export function ProjectBoard({ projectId }: ProjectBoardProps) {
     }
   };
 
-  const handleTaskUpdate = (taskId: string, updates: Record<string, unknown>) => {
+  const handleTaskUpdate = async (taskId: string, updates: Record<string, unknown>) => {
     console.log("🔄 Updating task:", taskId, updates);
-    // Use the updateTask mutation
-    fetch(`/api/tasks/${taskId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(updates),
-    }).then(() => {
-      queryClient.invalidateQueries({ queryKey: ["projects", projectId] });
-    });
+    try {
+      const response = await fetch(`/api/tasks/${taskId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updates),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update task");
+      }
+
+      await response.json();
+
+      // Invalidate queries to refresh UI
+      await queryClient.invalidateQueries({ queryKey: ["projects", projectId] });
+
+      // Broadcast the update to other users
+      const { broadcastTaskEvent } = await import("@/lib/hooks/use-realtime");
+      await broadcastTaskEvent(projectId, "task-updated", { taskId });
+
+      console.log("✅ Task updated successfully:", taskId);
+    } catch (error) {
+      console.error("❌ Failed to update task:", error);
+      toast.error("Failed to update task");
+    }
   };
 
-  const handleTaskReorder = (
+  const handleTaskReorder = async (
     taskId: string,
     newOrder: number,
     statusId: string
@@ -291,12 +309,13 @@ export function ProjectBoard({ projectId }: ProjectBoardProps) {
       }
 
       // Apply all updates
-      updates.forEach(({ id, order }) => {
-        handleTaskUpdate(id, { order });
-      });
+      for (const { id, order } of updates) {
+        await handleTaskUpdate(id, { order });
+      }
     } else {
-      // Moving to different status - just update the task's status and order
-      handleTaskUpdate(taskId, { order: newOrder, statusId });
+      // Moving to different status - update the task's status and order
+      await handleTaskUpdate(taskId, { order: newOrder, statusId });
+      toast.success("Task moved");
     }
   };
 
@@ -553,7 +572,7 @@ export function ProjectBoard({ projectId }: ProjectBoardProps) {
             </Button>
           </div>
         ) : viewMode === "kanban" ? (
-          <KanbanBoard
+          <KanbanBoardNew
             columns={columns}
             projectUsers={project.users}
             projectId={projectId}

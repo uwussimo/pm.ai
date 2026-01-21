@@ -64,7 +64,7 @@ export function useUpdateStatus(statusId: string, projectId: string) {
       position?: number;
     }) => {
       const res = await fetch(`/api/statuses/${statusId}`, {
-        method: "PUT",
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, color, unicode, position }),
       });

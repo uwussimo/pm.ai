@@ -224,25 +224,47 @@ export function useRealtimeUpdates(
   onTaskUpdate: (data: any) => void
 ) {
   useEffect(() => {
-    if (!projectId) return;
+    if (!projectId) {
+      console.warn("🔴 No projectId for realtime updates");
+      return;
+    }
 
     const pusher = getPusherClient();
-    if (!pusher) return;
+    if (!pusher) {
+      console.warn("🔴 Pusher client not initialized - realtime updates disabled");
+      return;
+    }
 
+    console.log("🟢 Subscribing to realtime channel:", `project-${projectId}`);
     const channel = pusher.subscribe(`project-${projectId}`);
 
+    // Log when subscription succeeds
+    channel.bind("pusher:subscription_succeeded", () => {
+      console.log("✅ Realtime subscription succeeded for project:", projectId);
+    });
+
+    channel.bind("pusher:subscription_error", (error: any) => {
+      console.error("❌ Realtime subscription error:", error);
+    });
+
     // Listen for task events
-    channel.bind("task-created", onTaskUpdate);
-    channel.bind("task-updated", onTaskUpdate);
-    channel.bind("task-deleted", onTaskUpdate);
-    channel.bind("task-moved", onTaskUpdate);
+    const handleTaskEvent = (eventName: string) => (data: any) => {
+      console.log(`📨 Received ${eventName}:`, data);
+      onTaskUpdate(data);
+    };
+
+    channel.bind("task-created", handleTaskEvent("task-created"));
+    channel.bind("task-updated", handleTaskEvent("task-updated"));
+    channel.bind("task-deleted", handleTaskEvent("task-deleted"));
+    channel.bind("task-moved", handleTaskEvent("task-moved"));
     
     // Listen for status events
-    channel.bind("status-created", onTaskUpdate);
-    channel.bind("status-updated", onTaskUpdate);
-    channel.bind("status-deleted", onTaskUpdate);
+    channel.bind("status-created", handleTaskEvent("status-created"));
+    channel.bind("status-updated", handleTaskEvent("status-updated"));
+    channel.bind("status-deleted", handleTaskEvent("status-deleted"));
 
     return () => {
+      console.log("🔴 Unsubscribing from realtime channel:", `project-${projectId}`);
       channel.unbind_all();
       channel.unsubscribe();
     };
@@ -256,7 +278,8 @@ export async function broadcastTaskEvent(
   data: any
 ) {
   try {
-    await fetch("/api/pusher/trigger", {
+    console.log(`📤 Broadcasting ${event} to project-${projectId}:`, data);
+    const response = await fetch("/api/pusher/trigger", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -265,7 +288,14 @@ export async function broadcastTaskEvent(
         data,
       }),
     });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("❌ Broadcast failed:", errorData);
+    } else {
+      console.log(`✅ Broadcast successful for ${event}`);
+    }
   } catch (error) {
-    console.error("Failed to broadcast task event:", error);
+    console.error("❌ Failed to broadcast task event:", error);
   }
 }

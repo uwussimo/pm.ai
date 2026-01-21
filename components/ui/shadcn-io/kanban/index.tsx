@@ -77,8 +77,10 @@ export const KanbanBoard = ({ id, children, className }: KanbanBoardProps) => {
   return (
     <div
       className={cn(
-        'flex size-full min-h-40 flex-col divide-y overflow-hidden rounded-md border bg-secondary text-xs shadow-sm ring-2 transition-all',
-        isOver ? 'ring-primary' : 'ring-transparent',
+        'flex size-full min-h-40 flex-col divide-y overflow-hidden rounded-md border-2 bg-secondary text-xs shadow-sm transition-all duration-200',
+        isOver
+          ? 'border-primary shadow-lg scale-[1.02] ring-2 ring-primary/20'
+          : 'border-transparent',
         className
       )}
       ref={setNodeRef}
@@ -318,12 +320,7 @@ export const KanbanProvider = <
         sensors={sensors}
         {...(props as any)} // eslint-disable-line @typescript-eslint/no-explicit-any
       >
-        <div
-          className={cn(
-            'grid size-full auto-cols-fr grid-flow-col gap-4',
-            className
-          )}
-        >
+        <div className={cn('flex', className)}>
           {columns.map((column) => children(column))}
         </div>
         {typeof window !== 'undefined' &&
