@@ -1,75 +1,28 @@
-# PM-USUFDEV - Project Management Tool
+# pm.ai
 
-A modern, full-featured project management application built with Next.js, Prisma, and PostgreSQL.
-
-## 🚀 Quick Start
+next.js + prisma + postgresql real-time project management tool for teams and tasks.
 
 ```bash
-# Install dependencies
+start
 npm install
-
-# Set up environment variables
 cp .env.example .env.local
-
-# Run database migrations
 npx prisma generate
 npx prisma db push
-
-# Start development server
 npm run dev
 ```
 
-Visit `http://localhost:3000` to access the application.
+visit `http://localhost:3000`
 
-## 📚 Documentation
+features
 
-All project documentation is located in the [`/docs`](/docs) folder:
+```txt
+kanban board, quick edit, filters, comments, markdown, light/dark mode, responsive
+```
 
-- **[Setup Guide](./docs/SETUP.md)** - Detailed installation and configuration
-- **[Features Documentation](./docs/NEW_FEATURES_SUMMARY.md)** - Complete feature list
-- **[Implementation Details](./docs/IMPLEMENTATION_SUMMARY.md)** - Technical implementation
-- **[Full Documentation Index](./docs/INDEX.md)** - All documentation files
+tech
 
-## ✨ Key Features
+```txt
+next.js, react, typescript, tailwind, prisma, postgresql, react query, zustand, jwt, dnd-kit
+```
 
-- 🔐 **Multi-tenant Architecture** - Secure user authentication and project isolation
-- 📋 **Kanban Board** - Trello-style drag-and-drop task management
-- ⚡ **Quick Edit** - Edit assignees and due dates directly from cards
-- 🔍 **Advanced Filters** - Filter by assignee, due date, and search
-- 💬 **Comments** - Full discussion threads on tasks
-- 📝 **Markdown Support** - Rich text formatting for task descriptions
-- 🎨 **Dark/Light Mode** - Beautiful UI with theme support
-- 🚀 **Optimistic Updates** - Instant UI feedback with React Query
-- 📱 **Responsive Design** - Works on all devices
-
-## 🛠️ Tech Stack
-
-- **Frontend:** Next.js 14, React, TypeScript, TailwindCSS
-- **UI Components:** shadcn/ui, Radix UI
-- **Backend:** Next.js API Routes, Prisma ORM
-- **Database:** PostgreSQL
-- **State Management:** React Query (TanStack Query), Zustand
-- **Authentication:** JWT with jose
-- **Drag & Drop:** @dnd-kit
-
-## 📖 Learn More
-
-Visit the [documentation folder](./docs) for comprehensive guides on:
-- Setup and deployment
-- Feature documentation
-- API reference
-- Development guidelines
-- Troubleshooting
-
-## 🤝 Contributing
-
-This is a personal project. For questions or suggestions, please refer to the documentation.
-
-## 📝 License
-
-Private project - All rights reserved.
-
----
-
-**Documentation:** [/docs](/docs) | **Issues:** Check docs/FIXES_SUMMARY.md | **Features:** docs/NEW_FEATURES_SUMMARY.md
-
+private project - all rights reserved
