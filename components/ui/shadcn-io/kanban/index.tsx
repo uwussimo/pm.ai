@@ -166,7 +166,7 @@ export const KanbanCards = <T extends KanbanItemProps = KanbanItemProps>({
       <SortableContext items={items}>
         <div
           className={cn('flex flex-grow flex-col gap-2 p-2', className)}
-          {...(props as any)}
+          {...(props as any)} // eslint-disable-line @typescript-eslint/no-explicit-any
         >
           {filteredData.map(children)}
         </div>
@@ -179,7 +179,8 @@ export const KanbanCards = <T extends KanbanItemProps = KanbanItemProps>({
 export type KanbanHeaderProps = HTMLAttributes<HTMLDivElement>;
 
 export const KanbanHeader = ({ className, ...props }: KanbanHeaderProps) => (
-  <div className={cn('m-0 p-2 font-semibold text-sm', className)} {...(props as any)} />
+  <div className={cn('m-0 p-2 font-semibold text-sm', className)} {...(props as any)} // eslint-disable-line @typescript-eslint/no-explicit-any
+  />
 );
 
 export type KanbanProviderProps<
@@ -315,7 +316,7 @@ export const KanbanProvider = <
         onDragOver={handleDragOver}
         onDragStart={handleDragStart}
         sensors={sensors}
-        {...(props as any)}
+        {...(props as any)} // eslint-disable-line @typescript-eslint/no-explicit-any
       >
         <div
           className={cn(

@@ -9,6 +9,7 @@ export type ModalType =
   | "manageUsers"
   | "shareProject"
   | "createStatus"
+  | "editStatus"
   | "createProject"
   | "editProject"
   | "confirm";
@@ -51,6 +52,11 @@ export interface CreateStatusData {
   projectId: string;
 }
 
+export interface EditStatusData {
+  projectId: string;
+  statusId: string;
+}
+
 export interface CreateProjectData {}
 
 export interface EditProjectData {
@@ -77,6 +83,7 @@ export type ModalData =
   | ManageUsersData
   | ShareProjectData
   | CreateStatusData
+  | EditStatusData
   | CreateProjectData
   | EditProjectData
   | ConfirmData;

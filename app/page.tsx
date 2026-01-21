@@ -208,8 +208,8 @@ export default async function Home() {
         <div className="grid gap-8">
           {/* Feature 1 */}
           <div className="flex items-start gap-6 p-8 rounded-2xl border bg-card">
-            <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-foreground dark:bg-white flex items-center justify-center">
-              <Layers className="h-6 w-6 text-background dark:text-primary-foreground" />
+            <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-foreground dark:bg-primary flex items-center justify-center">
+              <Layers className="h-6 w-6 text-background dark:text-primary-foreground dark:text-white" />
             </div>
             <div className="space-y-2">
               <h3 className="text-[24px] font-semibold tracking-tight text-foreground">

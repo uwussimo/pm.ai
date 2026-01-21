@@ -9,6 +9,7 @@ import { toast } from "sonner";
 interface User {
   id: string;
   email: string;
+  name?: string | null;
 }
 
 export function useAuth() {

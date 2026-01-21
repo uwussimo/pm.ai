@@ -271,25 +271,28 @@ export function useMoveTask(projectId: string) {
     mutationFn: async ({
       taskId,
       statusId,
+      order,
     }: {
       taskId: string;
       statusId: string;
+      order?: number;
     }) => {
       console.log("🚀 Mutation triggered - PATCH /api/tasks/" + taskId, {
         statusId,
+        order,
       });
       const res = await fetch(`/api/tasks/${taskId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ statusId }),
+        body: JSON.stringify({ statusId, order }),
       });
       const data = await res.json();
       console.log("📥 Response:", res.ok ? "Success" : "Error", data);
       if (!res.ok) throw new Error(data.error || "Failed to move task");
       return data.task as Task;
     },
-    onMutate: async ({ taskId, statusId }) => {
-      console.log("⚡ onMutate - Optimistic update", { taskId, statusId });
+    onMutate: async ({ taskId, statusId, order }) => {
+      console.log("⚡ onMutate - Optimistic update", { taskId, statusId, order });
       // Cancel any outgoing refetches
       await queryClient.cancelQueries({ queryKey: ["projects", projectId] });
       await queryClient.cancelQueries({ queryKey: ["tasks", taskId] });

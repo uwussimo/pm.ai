@@ -70,6 +70,9 @@ model Task {
   startDate DateTime?
   dueDate   DateTime?
 
+  priority  String   @default("medium") // low, medium, high, urgent
+  order     Int      @default(0) // For drag-drop ordering within status
+
   assigneeId String?
   assignee   User?    @relation(fields: [assigneeId], references: [id], onDelete: SetNull)
 

@@ -22,6 +22,7 @@ export async function POST(
       startDate,
       dueDate,
       imageUrl,
+      priority,
     } = await request.json();
 
     if (!title || !statusId) {
@@ -49,12 +50,23 @@ export async function POST(
       );
     }
 
+    // Get the maximum order value in this status to append the new task at the end
+    const maxOrderTask = await prisma.task.findFirst({
+      where: { statusId },
+      orderBy: { order: "desc" },
+      select: { order: true },
+    });
+
+    const newOrder = (maxOrderTask?.order ?? -1) + 1;
+
     const task = await prisma.task.create({
       data: {
         title,
         description,
         statusId,
         projectId,
+        priority: priority || "medium",
+        order: newOrder,
         ...(assigneeId && { assigneeId }),
         ...(startDate && { startDate: new Date(startDate) }),
         ...(dueDate && { dueDate: new Date(dueDate) }),

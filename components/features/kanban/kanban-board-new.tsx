@@ -30,11 +30,14 @@ import {
   User,
   CalendarIcon,
   MessageSquare,
-  UserPlus,
-  CalendarPlus,
   GripVertical,
   Trash2,
   MoreVertical,
+  AlertCircle,
+  ArrowUp,
+  ArrowDown,
+  Minus,
+  Edit,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -43,13 +46,6 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -57,16 +53,16 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { UserAvatar, getUserDisplayName } from "@/components/ui/user-avatar";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useUpdateTask, useCreateTask } from "@/lib/hooks/use-tasks";
-import { useDeleteStatus, useUpdateStatus } from "@/lib/hooks/use-statuses";
 import { useModal } from "@/lib/hooks/use-modal";
 
-interface Task {
+interface KanbanTask {
   id: string;
   title: string;
   description: string | null;
   statusId: string;
+  priority: string;
+  order: number;
   assignee: {
     id: string;
     email: string;
@@ -82,7 +78,7 @@ interface Column {
   name: string;
   unicode: string;
   color: string;
-  tasks: Task[];
+  tasks: KanbanTask[];
 }
 
 interface User {
@@ -96,9 +92,35 @@ interface KanbanBoardProps {
   columns: Column[];
   projectUsers: User[];
   projectId: string;
-  onTaskMove: (taskId: string, newStatusId: string) => void;
+  onTaskMove: (taskId: string, newStatusId: string, newOrder?: number) => void;
   onTaskClick: (taskId: string) => void;
+  onAddStatus?: () => void;
+  onEditStatus?: (statusId: string) => void;
 }
+
+const PriorityIcon = ({ priority }: { priority: string }) => {
+  const icons: Record<string, { icon: React.ReactNode; className: string }> = {
+    urgent: {
+      icon: <AlertCircle className="h-3.5 w-3.5" />,
+      className: "text-red-600 dark:text-red-400",
+    },
+    high: {
+      icon: <ArrowUp className="h-3.5 w-3.5" />,
+      className: "text-orange-600 dark:text-orange-400",
+    },
+    medium: {
+      icon: <Minus className="h-3.5 w-3.5" />,
+      className: "text-yellow-600 dark:text-yellow-400",
+    },
+    low: {
+      icon: <ArrowDown className="h-3.5 w-3.5" />,
+      className: "text-blue-600 dark:text-blue-400",
+    },
+  };
+
+  const config = icons[priority] || icons.medium;
+  return <span className={config.className}>{config.icon}</span>;
+};
 
 function TaskCard({
   task,
@@ -107,7 +129,7 @@ function TaskCard({
   projectId,
   isDraggingAny,
 }: {
-  task: Task;
+  task: KanbanTask;
   onClick: () => void;
   projectUsers: User[];
   projectId: string;
@@ -188,10 +210,15 @@ function TaskCard({
       >
         {/* Card Content */}
         <div className="p-3 space-y-2">
-          {/* Title */}
-          <h4 className="text-lg text-foreground font-medium line-clamp-3 pr-1">
-            {task.title}
-          </h4>
+          {/* Title with Priority */}
+          <div className="flex items-start gap-2">
+            <div className="mt-0.5">
+              <PriorityIcon priority={task.priority} />
+            </div>
+            <h4 className="text-lg text-foreground font-medium line-clamp-3 flex-1">
+              {task.title}
+            </h4>
+          </div>
 
           {/* Description Preview - Hidden when dragging */}
           {!isDragging && task.description && (
@@ -204,7 +231,7 @@ function TaskCard({
           {!isDragging && !isDraggingAny && (
             <div className="flex flex-wrap items-center gap-2 pt-1">
               {/* Due Date Badge with Native Picker */}
-              <div className="relative">
+              <div className="relative cursor-pointer">
                 <input
                   ref={dateInputRef}
                   type="date"
@@ -214,12 +241,11 @@ function TaskCard({
                   }}
                   onClick={(e) => e.stopPropagation()}
                   onPointerDown={(e) => e.stopPropagation()}
-                  className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                  style={{ zIndex: 10 }}
+                  className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
                 />
-                <button
+                <div
                   className={cn(
-                    "inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[13px] font-medium transition-colors pointer-events-none",
+                    "inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[13px] font-medium transition-colors",
                     task.dueDate
                       ? isOverdue
                         ? "bg-red-500/10 text-red-600 dark:text-red-400"
@@ -231,20 +257,20 @@ function TaskCard({
                   <span>
                     {task.dueDate
                       ? (() => {
-                          try {
-                            const dateStr = task.dueDate.split("T")[0];
-                            const date = new Date(dateStr + "T00:00:00");
-                            return date.toLocaleDateString("en-US", {
-                              month: "short",
-                              day: "numeric",
-                            });
-                          } catch {
-                            return task.dueDate;
-                          }
-                        })()
+                        try {
+                          const dateStr = task.dueDate.split("T")[0];
+                          const date = new Date(dateStr + "T00:00:00");
+                          return date.toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                          });
+                        } catch {
+                          return task.dueDate;
+                        }
+                      })()
                       : "Due date"}
                   </span>
-                </button>
+                </div>
               </div>
 
               {/* Assignee Badge with Quick Edit */}
@@ -357,6 +383,7 @@ function KanbanColumn({
   projectUsers,
   projectId,
   onDelete,
+  onEdit,
   isDraggingAny,
 }: {
   column: Column;
@@ -364,6 +391,7 @@ function KanbanColumn({
   projectUsers: User[];
   projectId: string;
   onDelete: () => void;
+  onEdit?: (statusId: string) => void;
   isDraggingAny: boolean;
 }) {
   const { setNodeRef: setDroppableRef, isOver } = useDroppable({
@@ -469,6 +497,12 @@ function KanbanColumn({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
+            {onEdit && (
+              <DropdownMenuItem onClick={() => onEdit(column.id)}>
+                <Edit className="h-4 w-4 mr-2" />
+                Edit status
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem
               onClick={handleDelete}
               className="text-destructive focus:text-destructive"
@@ -487,8 +521,10 @@ function KanbanColumn({
           backgroundColor: isOver ? `${column.color}15` : `${column.color}08`,
         }}
         className={cn(
-          "flex-1 overflow-y-auto px-2 py-1 rounded-lg transition-all duration-200 min-h-[100px]",
-          isOver && "ring-2 ring-primary/20"
+          "flex-1 overflow-y-auto px-2 py-1 rounded-lg transition-all duration-200 min-h-[500px] border-2",
+          isOver
+            ? "border-primary shadow-lg scale-[1.02]"
+            : "border-transparent"
         )}
       >
         <SortableContext
@@ -557,6 +593,8 @@ export function KanbanBoard({
   projectId,
   onTaskMove,
   onTaskClick,
+  onAddStatus,
+  onEditStatus,
 }: KanbanBoardProps) {
   const [columns, setColumns] = React.useState(initialColumns);
   const [activeId, setActiveId] = React.useState<string | null>(null);
@@ -750,27 +788,44 @@ export function KanbanBoard({
       return;
     }
 
-    // Determine the target column
+    // Determine the target column and calculate new order
     let targetColumnId: string | null = null;
+    let newOrder: number | undefined = undefined;
 
     // Check if dropped directly on a column
     const overColumn = columns.find((col) => col.id === overId);
     if (overColumn) {
       targetColumnId = overId;
+      // If dropped on empty column or bottom of column, put at end
+      newOrder = overColumn.tasks.length;
     } else {
-      // Dropped on a task, find which column it belongs to
+      // Dropped on a task, find which column it belongs to and position
       const overData = findTask(overId);
       if (overData) {
         targetColumnId = overData.columnId;
+        const targetColumn = columns.find((col) => col.id === targetColumnId);
+        if (targetColumn) {
+          const overTaskIndex = targetColumn.tasks.findIndex(
+            (t) => t.id === overId
+          );
+          // Get the actual order value from the task at that index, or use the index
+          newOrder = overTaskIndex >= 0
+            ? overTaskIndex
+            : targetColumn.tasks.length;
+        }
       }
     }
 
-    // If we found a target column and it's different from the original, update the database
-    if (targetColumnId && targetColumnId !== originalColumnId) {
-      console.log(
-        `📤 Calling onTaskMove: ${activeId} from ${originalColumnId} to ${targetColumnId}`
-      );
-      onTaskMove(activeId, targetColumnId);
+    // If we found a target column, update the database
+    if (targetColumnId) {
+      // Only update if status changed or order changed within same column
+      const statusChanged = targetColumnId !== originalColumnId;
+      if (statusChanged || newOrder !== undefined) {
+        console.log(
+          `📤 Calling onTaskMove: ${activeId} from ${originalColumnId} to ${targetColumnId}, order: ${newOrder}`
+        );
+        onTaskMove(activeId, targetColumnId, newOrder);
+      }
     }
 
     // Reset original column tracking
@@ -838,8 +893,22 @@ export function KanbanBoard({
               projectId={projectId}
               isDraggingAny={isDraggingAny}
               onDelete={() => handleDeleteStatus(column.id)}
+              onEdit={onEditStatus}
             />
           ))}
+
+          {/* Add Status Button */}
+          {onAddStatus && (
+            <div className="flex-shrink-0 w-[280px]">
+              <button
+                onClick={onAddStatus}
+                className="h-full min-h-[500px] w-full border-2 border-dashed border-muted-foreground/25 rounded-lg hover:border-primary/50 hover:bg-accent/50 transition-all flex flex-col items-center justify-center gap-3 text-muted-foreground hover:text-foreground"
+              >
+                <Plus className="h-8 w-8" />
+                <span className="text-sm font-medium">Add Status</span>
+              </button>
+            </div>
+          )}
         </div>
       </SortableContext>
 
@@ -853,25 +922,25 @@ export function KanbanBoard({
               {(activeTask.assignee ||
                 activeTask.dueDate ||
                 activeTask._count.comments > 0) && (
-                <div className="flex flex-wrap items-center gap-1.5">
-                  {activeTask.dueDate && (
-                    <div className="inline-flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium bg-muted">
-                      <CalendarIcon className="h-3 w-3" />
-                    </div>
-                  )}
-                  {activeTask._count.comments > 0 && (
-                    <div className="inline-flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium bg-muted">
-                      <MessageSquare className="h-3 w-3" />
-                      <span>{activeTask._count.comments}</span>
-                    </div>
-                  )}
-                  {activeTask.assignee && (
-                    <div className="inline-flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium bg-muted">
-                      <User className="h-3 w-3" />
-                    </div>
-                  )}
-                </div>
-              )}
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    {activeTask.dueDate && (
+                      <div className="inline-flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium bg-muted">
+                        <CalendarIcon className="h-3 w-3" />
+                      </div>
+                    )}
+                    {activeTask._count.comments > 0 && (
+                      <div className="inline-flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium bg-muted">
+                        <MessageSquare className="h-3 w-3" />
+                        <span>{activeTask._count.comments}</span>
+                      </div>
+                    )}
+                    {activeTask.assignee && (
+                      <div className="inline-flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium bg-muted">
+                        <User className="h-3 w-3" />
+                      </div>
+                    )}
+                  </div>
+                )}
             </div>
           </Card>
         ) : null}

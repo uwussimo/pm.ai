@@ -94,6 +94,8 @@ export async function PATCH(
       startDate,
       dueDate,
       imageUrl,
+      priority,
+      order,
     } = await request.json();
 
     const task = await prisma.task.findUnique({
@@ -135,6 +137,8 @@ export async function PATCH(
           dueDate: dueDate ? new Date(dueDate) : null,
         }),
         ...(imageUrl !== undefined && { imageUrl }),
+        ...(priority && { priority }),
+        ...(order !== undefined && { order }),
       },
       include: {
         assignee: {

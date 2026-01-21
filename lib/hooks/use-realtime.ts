@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { getPusherClient } from "@/lib/pusher-client";
 import type { Channel, PresenceChannel } from "pusher-js";
 
@@ -109,6 +109,7 @@ export function useCursors(
   const [cursors, setCursors] = useState<Map<string, CursorPosition>>(
     new Map()
   );
+  const timeoutRefs = useRef<Map<string, NodeJS.Timeout>>(new Map());
 
   useEffect(() => {
     if (!channel) {
@@ -120,17 +121,23 @@ export function useCursors(
 
     // Listen for cursor updates from other users
     const handleCursorUpdate = (data: CursorPosition) => {
-      console.log("📍 Cursor update received:", data);
       if (data.userId !== currentUserId) {
+        console.log("📍 Cursor update received:", data.userId);
+        
         setCursors((prev) => {
           const next = new Map(prev);
           next.set(data.userId, data);
-          console.log("🖱️ Active cursors:", next.size);
           return next;
         });
 
-        // Remove stale cursors after 3 seconds of inactivity (Figma-style)
-        setTimeout(() => {
+        // Clear existing timeout for this user
+        const existingTimeout = timeoutRefs.current.get(data.userId);
+        if (existingTimeout) {
+          clearTimeout(existingTimeout);
+        }
+
+        // Set new timeout to remove stale cursor (3 seconds of inactivity)
+        const timeout = setTimeout(() => {
           setCursors((prev) => {
             const next = new Map(prev);
             const cursor = next.get(data.userId);
@@ -140,47 +147,70 @@ export function useCursors(
             }
             return next;
           });
+          timeoutRefs.current.delete(data.userId);
         }, 3000);
+
+        timeoutRefs.current.set(data.userId, timeout);
+      }
+    };
+
+    // Handle when a member leaves the channel
+    const handleMemberRemoved = (member: any) => {
+      console.log("👋 Member left, removing cursor:", member.id);
+      setCursors((prev) => {
+        const next = new Map(prev);
+        next.delete(member.id);
+        return next;
+      });
+      
+      // Clear timeout for this user
+      const timeout = timeoutRefs.current.get(member.id);
+      if (timeout) {
+        clearTimeout(timeout);
+        timeoutRefs.current.delete(member.id);
       }
     };
 
     channel.bind("client-cursor-move", handleCursorUpdate);
+    channel.bind("pusher:member_removed", handleMemberRemoved);
 
     return () => {
       channel.unbind("client-cursor-move", handleCursorUpdate);
+      channel.unbind("pusher:member_removed", handleMemberRemoved);
+      
+      // Clear all timeouts
+      timeoutRefs.current.forEach((timeout) => clearTimeout(timeout));
+      timeoutRefs.current.clear();
     };
   }, [channel, currentUserId]);
 
   const broadcastCursor = useCallback(
     (x: number, y: number, userName: string) => {
       if (!channel) {
-        console.warn("🔴 Cannot broadcast cursor: no channel");
         return;
       }
 
-      const data = {
+      // Only broadcast if channel is subscribed
+      if (!channel.subscribed) {
+        console.warn("🔴 Channel not yet subscribed, skipping cursor broadcast");
+        return;
+      }
+
+      const data: CursorPosition = {
         userId: currentUserId,
         userName,
         x,
         y,
         timestamp: Date.now(),
       };
-
-      console.log("📤 Broadcasting cursor:", data, "on channel:", channel.name);
       
       try {
         const result = channel.trigger("client-cursor-move", data);
         if (!result) {
-          console.error("❌ Trigger returned false - Client Events might not be enabled or channel not ready");
-        } else {
-          console.log("✅ Cursor broadcast successful");
+          console.error("❌ Client Events might not be enabled on channel:", channel.name);
         }
       } catch (error) {
         console.error("❌ Failed to broadcast cursor:", error);
-        console.error("Channel state:", {
-          subscribed: channel.subscribed,
-          name: channel.name,
-        });
       }
     },
     [channel, currentUserId]

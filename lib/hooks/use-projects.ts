@@ -33,10 +33,20 @@ interface Task {
   startDate: string | null;
   dueDate: string | null;
   imageUrl: string | null;
+  priority: string;
+  order: number;
   assignee: User | null;
+  status: {
+    id: string;
+    name: string;
+    color: string;
+    unicode: string;
+  };
   _count: {
     comments: number;
   };
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Project {

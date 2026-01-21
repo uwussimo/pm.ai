@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { ReactQueryProvider } from "@/lib/react-query";
 import { ModalProvider } from "@/components/widgets/modal-provider";
 import "./globals.css";
+import "./ag-grid-theme.css";
 
 const dmSans = DM_Sans({
   variable: "--font-dm-sans",

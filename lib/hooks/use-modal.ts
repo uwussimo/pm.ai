@@ -7,6 +7,7 @@ import type {
   ManageUsersData,
   ShareProjectData,
   CreateStatusData,
+  EditStatusData,
   CreateProjectData,
   EditProjectData,
   ConfirmData,
@@ -26,6 +27,7 @@ export function useModal() {
     openManageUsers: (data: ManageUsersData) => open("manageUsers", data),
     openShareProject: (data: ShareProjectData) => open("shareProject", data),
     openCreateStatus: (data: CreateStatusData) => open("createStatus", data),
+    openEditStatus: (data: EditStatusData) => open("editStatus", data),
     openCreateProject: (data: CreateProjectData) => open("createProject", data),
     openEditProject: (data: EditProjectData) => open("editProject", data),
     
