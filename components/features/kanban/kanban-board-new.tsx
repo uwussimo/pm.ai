@@ -107,7 +107,7 @@ export function KanbanBoardNew({
         ...col,
         name: col.name,
       })),
-    [columns]
+    [columns],
   );
 
   const kanbanData: KanbanItemData[] = useMemo(() => {
@@ -156,7 +156,7 @@ export function KanbanBoardNew({
         targetStatusId = overColumn.id;
         // Find the max order in this column and add 1
         const tasksInColumn = kanbanData.filter(
-          (t) => t.statusId === overColumn.id
+          (t) => t.statusId === overColumn.id,
         );
         newOrder =
           tasksInColumn.length > 0
@@ -201,10 +201,7 @@ export function KanbanBoardNew({
                 />
               )}
             </KanbanCards>
-            <AddTaskButton
-              columnId={column.id}
-              projectId={projectId}
-            />
+            <AddTaskButton columnId={column.id} projectId={projectId} />
           </KanbanBoard>
         )}
       </KanbanProvider>
@@ -341,7 +338,7 @@ function TaskCard({
   const handlePriorityChange = (priority: string) => {
     updateTask.mutate(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      { priority } as any
+      { priority } as any,
     );
   };
 
@@ -359,11 +356,11 @@ function TaskCard({
   const getPriorityColor = () => {
     switch (task.priority) {
       case "high":
-        return "text-red-600 bg-red-50 hover:bg-red-100 dark:bg-red-950 dark:text-red-400";
+        return "text-red-400 bg-red-500/10 hover:bg-red-500/20";
       case "low":
-        return "text-blue-600 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950 dark:text-blue-400";
+        return "text-blue-400 bg-blue-500/10 hover:bg-blue-500/20";
       default:
-        return "text-gray-600 bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-400";
+        return "text-gray-400 bg-gray-500/10 hover:bg-gray-500/20";
     }
   };
 
@@ -404,21 +401,24 @@ function TaskCard({
                 onPointerDown={(e) => e.stopPropagation()}
                 className={cn(
                   "inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium transition-colors",
-                  getPriorityColor()
+                  getPriorityColor(),
                 )}
               >
                 {getPriorityIcon()}
                 <span className="capitalize">{task.priority}</span>
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" onClick={(e) => e.stopPropagation()}>
+            <DropdownMenuContent
+              align="start"
+              onClick={(e) => e.stopPropagation()}
+            >
               <DropdownMenuItem
                 onClick={(e) => {
                   e.stopPropagation();
                   handlePriorityChange("high");
                 }}
               >
-                <ArrowUp className="h-4 w-4 mr-2 text-red-600" />
+                <ArrowUp className="h-4 w-4 mr-2 text-red-400" />
                 High
               </DropdownMenuItem>
               <DropdownMenuItem
@@ -463,9 +463,9 @@ function TaskCard({
                 "inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[13px] font-medium transition-colors cursor-pointer",
                 task.dueDate
                   ? isOverdue
-                    ? "bg-red-50 text-red-700 hover:bg-red-100 dark:bg-red-950 dark:text-red-400"
-                    : "bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-950 dark:text-blue-400"
-                  : "bg-muted text-muted-foreground hover:bg-muted/80"
+                    ? "bg-red-500/10 text-red-400 hover:bg-red-500/20"
+                    : "bg-primary/10 text-primary hover:bg-primary/20"
+                  : "bg-muted text-muted-foreground hover:bg-muted/80",
               )}
             >
               {isOverdue && <AlertCircle className="h-3.5 w-3.5" />}
@@ -473,9 +473,9 @@ function TaskCard({
               <span className="text-xs">
                 {task.dueDate
                   ? new Date(task.dueDate).toLocaleDateString("en-US", {
-                    month: "short",
-                    day: "numeric",
-                  })
+                      month: "short",
+                      day: "numeric",
+                    })
                   : "No date"}
               </span>
             </button>
@@ -518,7 +518,10 @@ function TaskCard({
                 )}
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" onClick={(e) => e.stopPropagation()}>
+            <DropdownMenuContent
+              align="start"
+              onClick={(e) => e.stopPropagation()}
+            >
               <DropdownMenuItem
                 onClick={(e) => {
                   e.stopPropagation();

@@ -16,14 +16,14 @@ interface PresenceAvatarsProps {
 // Refined color palette
 function getUserColor(userId: string): string {
   const colors = [
-    "#0EA5E9", // sky blue
-    "#8B5CF6", // violet
-    "#EC4899", // pink
-    "#F59E0B", // amber
-    "#10B981", // emerald
-    "#6366F1", // indigo
-    "#14B8A6", // teal
-    "#F97316", // orange
+    "#c8ff00", // lime
+    "#8b5cf6", // violet
+    "#06b6d4", // cyan
+    "#f59e0b", // amber
+    "#10b981", // emerald
+    "#ec4899", // pink
+    "#6366f1", // indigo
+    "#f97316", // orange
   ];
 
   let hash = 0;

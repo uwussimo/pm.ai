@@ -15,8 +15,8 @@ export default async function SettingsPage() {
 
   const user = await prisma.user.findUnique({
     where: { id: session.userId },
-    select: { 
-      id: true, 
+    select: {
+      id: true,
       email: true,
       name: true,
       description: true,
@@ -41,7 +41,7 @@ export default async function SettingsPage() {
               </Button>
             </Link>
             <div className="h-8 w-px bg-border" />
-            <h1 className="text-[21px] font-semibold tracking-tight text-[#1D1D1F] dark:text-white">
+            <h1 className="text-[21px] font-semibold tracking-tight text-foreground">
               Settings
             </h1>
           </div>

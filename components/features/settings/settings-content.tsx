@@ -1,14 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Moon, Sun, Monitor, LogOut, Edit, Github } from "lucide-react";
+import { LogOut, Edit, Github } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { UserAvatar } from "@/components/ui/user-avatar";
-import { useTheme } from "next-themes";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { useUpdateProfile } from "@/lib/hooks/use-profile";
 import { formatDistanceToNow } from "date-fns";
@@ -25,7 +24,6 @@ interface SettingsContentProps {
 }
 
 export function SettingsContent({ user }: SettingsContentProps) {
-  const { theme, setTheme } = useTheme();
   const { signOut, isSigningOut } = useAuth();
   const updateProfile = useUpdateProfile();
 
@@ -45,7 +43,7 @@ export function SettingsContent({ user }: SettingsContentProps) {
         onSuccess: () => {
           setIsEditing(false);
         },
-      }
+      },
     );
   };
 
@@ -62,10 +60,10 @@ export function SettingsContent({ user }: SettingsContentProps) {
       <div>
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="text-[24px] font-semibold tracking-tight text-[#1D1D1F] dark:text-white">
+            <h2 className="text-[24px] font-semibold tracking-tight text-foreground">
               Profile
             </h2>
-            <p className="text-[15px] text-[#86868B] mt-1">
+            <p className="text-[15px] text-muted-foreground mt-1">
               Your account information
             </p>
           </div>
@@ -87,10 +85,10 @@ export function SettingsContent({ user }: SettingsContentProps) {
               <UserAvatar user={user} size="lg" />
               <div className="flex-1 min-w-0 space-y-4">
                 <div>
-                  <Label className="text-[13px] text-[#86868B] uppercase tracking-wide">
+                  <Label className="text-[13px] text-muted-foreground uppercase tracking-wide">
                     Email
                   </Label>
-                  <p className="text-[17px] text-[#1D1D1F] dark:text-white mt-1">
+                  <p className="text-[17px] text-foreground mt-1">
                     {user.email}
                   </p>
                 </div>
@@ -127,7 +125,7 @@ export function SettingsContent({ user }: SettingsContentProps) {
                         GitHub URL
                       </Label>
                       <div className="relative mt-2">
-                        <Github className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#86868B]" />
+                        <Github className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <Input
                           id="githubUrl"
                           value={githubUrl}
@@ -157,34 +155,34 @@ export function SettingsContent({ user }: SettingsContentProps) {
                   <>
                     {name && (
                       <div>
-                        <Label className="text-[13px] text-[#86868B] uppercase tracking-wide">
+                        <Label className="text-[13px] text-muted-foreground uppercase tracking-wide">
                           Name
                         </Label>
-                        <p className="text-[17px] text-[#1D1D1F] dark:text-white mt-1">
+                        <p className="text-[17px] text-foreground mt-1">
                           {name}
                         </p>
                       </div>
                     )}
                     {description && (
                       <div>
-                        <Label className="text-[13px] text-[#86868B] uppercase tracking-wide">
+                        <Label className="text-[13px] text-muted-foreground uppercase tracking-wide">
                           Bio
                         </Label>
-                        <p className="text-[15px] text-[#1D1D1F] dark:text-white mt-1">
+                        <p className="text-[15px] text-foreground mt-1">
                           {description}
                         </p>
                       </div>
                     )}
                     {githubUrl && (
                       <div>
-                        <Label className="text-[13px] text-[#86868B] uppercase tracking-wide">
+                        <Label className="text-[13px] text-muted-foreground uppercase tracking-wide">
                           GitHub
                         </Label>
                         <a
                           href={githubUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-[15px] text-[#1D1D1F] dark:text-white mt-1 hover:underline flex items-center gap-2"
+                          className="text-[15px] text-foreground mt-1 hover:underline flex items-center gap-2"
                         >
                           <Github className="h-4 w-4" />
                           {githubUrl}
@@ -192,10 +190,10 @@ export function SettingsContent({ user }: SettingsContentProps) {
                       </div>
                     )}
                     <div>
-                      <Label className="text-[13px] text-[#86868B] uppercase tracking-wide">
+                      <Label className="text-[13px] text-muted-foreground uppercase tracking-wide">
                         Member since
                       </Label>
-                      <p className="text-[17px] text-[#1D1D1F] dark:text-white mt-1">
+                      <p className="text-[17px] text-foreground mt-1">
                         {formatDistanceToNow(new Date(user.createdAt), {
                           addSuffix: true,
                         })}
@@ -209,70 +207,15 @@ export function SettingsContent({ user }: SettingsContentProps) {
         </Card>
       </div>
 
-      {/* Appearance Section */}
-      <div>
-        <h2 className="text-[24px] font-semibold tracking-tight text-[#1D1D1F] dark:text-white mb-2">
-          Appearance
-        </h2>
-        <p className="text-[15px] text-[#86868B] mb-6">
-          Choose how the app looks to you
-        </p>
-
-        <Card className="p-6">
-          <div className="space-y-4">
-            <Label className="text-[15px] text-[#1D1D1F] dark:text-white">
-              Theme
-            </Label>
-            <div className="grid grid-cols-3 gap-3">
-              <button
-                onClick={() => setTheme("light")}
-                className={`flex flex-col items-center gap-3 p-4 rounded-lg border-2 transition-all ${
-                  theme === "light"
-                    ? "border-[#1D1D1F] dark:border-white bg-muted"
-                    : "border-border hover:border-[#86868B]"
-                }`}
-              >
-                <Sun className="h-6 w-6" />
-                <span className="text-[15px] font-medium">Light</span>
-              </button>
-
-              <button
-                onClick={() => setTheme("dark")}
-                className={`flex flex-col items-center gap-3 p-4 rounded-lg border-2 transition-all ${
-                  theme === "dark"
-                    ? "border-[#1D1D1F] dark:border-white bg-muted"
-                    : "border-border hover:border-[#86868B]"
-                }`}
-              >
-                <Moon className="h-6 w-6" />
-                <span className="text-[15px] font-medium">Dark</span>
-              </button>
-
-              <button
-                onClick={() => setTheme("system")}
-                className={`flex flex-col items-center gap-3 p-4 rounded-lg border-2 transition-all ${
-                  theme === "system"
-                    ? "border-[#1D1D1F] dark:border-white bg-muted"
-                    : "border-border hover:border-[#86868B]"
-                }`}
-              >
-                <Monitor className="h-6 w-6" />
-                <span className="text-[15px] font-medium">System</span>
-              </button>
-            </div>
-          </div>
-        </Card>
-      </div>
-
       {/* Account Actions */}
       <div>
         <Card className="p-6">
           <div className="space-y-4">
             <div>
-              <h3 className="text-[17px] font-semibold text-[#1D1D1F] dark:text-white mb-1">
+              <h3 className="text-[17px] font-semibold text-foreground mb-1">
                 Sign out
               </h3>
-              <p className="text-[15px] text-[#86868B] mb-4">
+              <p className="text-[15px] text-muted-foreground mb-4">
                 Sign out of your account on this device
               </p>
               <Button

@@ -69,9 +69,7 @@ export function ProjectBoard({ projectId }: ProjectBoardProps) {
   const handleRealtimeUpdate = useCallback(() => {
     // Invalidate queries to refetch data
     queryClient.invalidateQueries({ queryKey: ["projects", projectId] });
-  },
-    [queryClient, projectId]
-  );
+  }, [queryClient, projectId]);
 
   useRealtimeUpdates(projectId, handleRealtimeUpdate);
 
@@ -85,11 +83,12 @@ export function ProjectBoard({ projectId }: ProjectBoardProps) {
       }
 
       throttleRef.current = setTimeout(() => {
-        const userName = ("name" in user && user.name) || user.email.split("@")[0];
+        const userName =
+          ("name" in user && user.name) || user.email.split("@")[0];
         broadcastCursor(e.clientX, e.clientY, userName);
       }, 16);
     },
-    [user, channel, broadcastCursor]
+    [user, channel, broadcastCursor],
   );
 
   useEffect(() => {
@@ -107,14 +106,14 @@ export function ProjectBoard({ projectId }: ProjectBoardProps) {
   // Refined color palette matching presence avatars
   const getUserColor = (userId: string): string => {
     const colors = [
-      "#0EA5E9", // sky blue
-      "#8B5CF6", // violet
-      "#EC4899", // pink
-      "#F59E0B", // amber
-      "#10B981", // emerald
-      "#6366F1", // indigo
-      "#14B8A6", // teal
-      "#F97316", // orange
+      "#c8ff00", // lime
+      "#8b5cf6", // violet
+      "#06b6d4", // cyan
+      "#f59e0b", // amber
+      "#10b981", // emerald
+      "#ec4899", // pink
+      "#6366f1", // indigo
+      "#f97316", // orange
     ];
 
     let hash = 0;
@@ -154,12 +153,8 @@ export function ProjectBoard({ projectId }: ProjectBoardProps) {
     if (
       searchQuery &&
       !task.title.toLowerCase().includes(searchQuery.toLowerCase()) &&
-      !task.description
-        ?.toLowerCase()
-        .includes(searchQuery.toLowerCase()) &&
-      !task.assignee?.email
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase())
+      !task.description?.toLowerCase().includes(searchQuery.toLowerCase()) &&
+      !task.assignee?.email.toLowerCase().includes(searchQuery.toLowerCase())
     ) {
       return false;
     }
@@ -167,10 +162,7 @@ export function ProjectBoard({ projectId }: ProjectBoardProps) {
     // Assignee filter
     if (filterAssignee !== "all") {
       if (filterAssignee === "unassigned" && task.assignee) return false;
-      if (
-        filterAssignee !== "unassigned" &&
-        task.assigneeId !== filterAssignee
-      )
+      if (filterAssignee !== "unassigned" && task.assigneeId !== filterAssignee)
         return false;
     }
 
@@ -180,13 +172,13 @@ export function ProjectBoard({ projectId }: ProjectBoardProps) {
       today.setHours(0, 0, 0, 0);
       const dueDate = task.dueDate
         ? (() => {
-          try {
-            const dateStr = task.dueDate.split("T")[0];
-            return new Date(dateStr + "T00:00:00");
-          } catch {
-            return null;
-          }
-        })()
+            try {
+              const dateStr = task.dueDate.split("T")[0];
+              return new Date(dateStr + "T00:00:00");
+            } catch {
+              return null;
+            }
+          })()
         : null;
 
       if (filterDueDate === "no-date" && dueDate) return false;
@@ -222,9 +214,16 @@ export function ProjectBoard({ projectId }: ProjectBoardProps) {
   const handleTaskMove = (
     taskId: string,
     newStatusId: string,
-    newOrder?: number
+    newOrder?: number,
   ) => {
-    console.log("🔄 Moving task:", taskId, "to status:", newStatusId, "order:", newOrder);
+    console.log(
+      "🔄 Moving task:",
+      taskId,
+      "to status:",
+      newStatusId,
+      "order:",
+      newOrder,
+    );
 
     // If newOrder is provided, use the reordering logic
     if (newOrder !== undefined) {
@@ -235,7 +234,10 @@ export function ProjectBoard({ projectId }: ProjectBoardProps) {
     }
   };
 
-  const handleTaskUpdate = async (taskId: string, updates: Record<string, unknown>) => {
+  const handleTaskUpdate = async (
+    taskId: string,
+    updates: Record<string, unknown>,
+  ) => {
     console.log("🔄 Updating task:", taskId, updates);
     try {
       const response = await fetch(`/api/tasks/${taskId}`, {
@@ -251,7 +253,9 @@ export function ProjectBoard({ projectId }: ProjectBoardProps) {
       await response.json();
 
       // Invalidate queries to refresh UI
-      await queryClient.invalidateQueries({ queryKey: ["projects", projectId] });
+      await queryClient.invalidateQueries({
+        queryKey: ["projects", projectId],
+      });
 
       // Broadcast the update to other users
       const { broadcastTaskEvent } = await import("@/lib/hooks/use-realtime");
@@ -267,9 +271,16 @@ export function ProjectBoard({ projectId }: ProjectBoardProps) {
   const handleTaskReorder = async (
     taskId: string,
     newOrder: number,
-    statusId: string
+    statusId: string,
   ) => {
-    console.log("🔄 Reordering task:", taskId, "to order:", newOrder, "in status:", statusId);
+    console.log(
+      "🔄 Reordering task:",
+      taskId,
+      "to order:",
+      newOrder,
+      "in status:",
+      statusId,
+    );
 
     // Find the task being moved
     const task = filteredTasks.find((t) => t.id === taskId);
@@ -480,76 +491,76 @@ export function ProjectBoard({ projectId }: ProjectBoardProps) {
             {(searchQuery ||
               filterAssignee !== "all" ||
               filterDueDate !== "all") && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setSearchQuery("");
-                    setFilterAssignee("all");
-                    setFilterDueDate("all");
-                  }}
-                  className="h-9 gap-2"
-                >
-                  <X className="h-3.5 w-3.5" />
-                  Clear all
-                </Button>
-              )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setSearchQuery("");
+                  setFilterAssignee("all");
+                  setFilterDueDate("all");
+                }}
+                className="h-9 gap-2"
+              >
+                <X className="h-3.5 w-3.5" />
+                Clear all
+              </Button>
+            )}
           </div>
 
           {/* Active Filters Display */}
           {(filterAssignee !== "all" ||
             filterDueDate !== "all" ||
             searchQuery) && (
-              <div className="flex flex-wrap items-center gap-2 text-xs">
-                <span className="text-muted-foreground font-medium">
-                  Filters:
-                </span>
-                {searchQuery && (
-                  <Badge variant="secondary" className="gap-1.5 font-normal">
-                    Search: &quot;
-                    {searchQuery.length > 20
-                      ? searchQuery.slice(0, 20) + "..."
-                      : searchQuery}
-                    &quot;
-                    <X
-                      className="h-3 w-3 cursor-pointer hover:text-foreground transition-colors"
-                      onClick={() => setSearchQuery("")}
-                    />
-                  </Badge>
-                )}
-                {filterAssignee !== "all" && (
-                  <Badge variant="secondary" className="gap-1.5 font-normal">
-                    {filterAssignee === "unassigned"
-                      ? "Unassigned"
-                      : getUserDisplayName(
+            <div className="flex flex-wrap items-center gap-2 text-xs">
+              <span className="text-muted-foreground font-medium">
+                Filters:
+              </span>
+              {searchQuery && (
+                <Badge variant="secondary" className="gap-1.5 font-normal">
+                  Search: &quot;
+                  {searchQuery.length > 20
+                    ? searchQuery.slice(0, 20) + "..."
+                    : searchQuery}
+                  &quot;
+                  <X
+                    className="h-3 w-3 cursor-pointer hover:text-foreground transition-colors"
+                    onClick={() => setSearchQuery("")}
+                  />
+                </Badge>
+              )}
+              {filterAssignee !== "all" && (
+                <Badge variant="secondary" className="gap-1.5 font-normal">
+                  {filterAssignee === "unassigned"
+                    ? "Unassigned"
+                    : getUserDisplayName(
                         project.users.find((u) => u.id === filterAssignee) || {
                           id: "",
                           email: "",
-                        }
+                        },
                       )}
-                    <X
-                      className="h-3 w-3 cursor-pointer hover:text-foreground transition-colors"
-                      onClick={() => setFilterAssignee("all")}
-                    />
-                  </Badge>
-                )}
-                {filterDueDate !== "all" && (
-                  <Badge variant="secondary" className="gap-1.5 font-normal">
-                    {filterDueDate === "no-date"
-                      ? "No due date"
-                      : filterDueDate === "overdue"
-                        ? "Overdue"
-                        : filterDueDate === "today"
-                          ? "Due today"
-                          : "Due this week"}
-                    <X
-                      className="h-3 w-3 cursor-pointer hover:text-foreground transition-colors"
-                      onClick={() => setFilterDueDate("all")}
-                    />
-                  </Badge>
-                )}
-              </div>
-            )}
+                  <X
+                    className="h-3 w-3 cursor-pointer hover:text-foreground transition-colors"
+                    onClick={() => setFilterAssignee("all")}
+                  />
+                </Badge>
+              )}
+              {filterDueDate !== "all" && (
+                <Badge variant="secondary" className="gap-1.5 font-normal">
+                  {filterDueDate === "no-date"
+                    ? "No due date"
+                    : filterDueDate === "overdue"
+                      ? "Overdue"
+                      : filterDueDate === "today"
+                        ? "Due today"
+                        : "Due this week"}
+                  <X
+                    className="h-3 w-3 cursor-pointer hover:text-foreground transition-colors"
+                    onClick={() => setFilterDueDate("all")}
+                  />
+                </Badge>
+              )}
+            </div>
+          )}
         </div>
 
         {columns.length === 0 ? (
@@ -559,8 +570,9 @@ export function ProjectBoard({ projectId }: ProjectBoardProps) {
             </div>
             <h3 className="text-xl font-semibold mb-2">Set up your workflow</h3>
             <p className="text-sm text-muted-foreground mb-8 max-w-md text-center">
-              Create status columns like &quot;To Do&quot;, &quot;In Progress&quot;, and &quot;Done&quot; to
-              organize and track your tasks effectively.
+              Create status columns like &quot;To Do&quot;, &quot;In
+              Progress&quot;, and &quot;Done&quot; to organize and track your
+              tasks effectively.
             </p>
             <Button
               onClick={() => modal.openCreateStatus({ projectId })}
@@ -579,7 +591,9 @@ export function ProjectBoard({ projectId }: ProjectBoardProps) {
             onTaskMove={handleTaskMove}
             onTaskClick={handleTaskClick}
             onAddStatus={() => modal.openCreateStatus({ projectId })}
-            onEditStatus={(statusId) => modal.openEditStatus({ projectId, statusId })}
+            onEditStatus={(statusId) =>
+              modal.openEditStatus({ projectId, statusId })
+            }
           />
         ) : (
           <TaskGridView

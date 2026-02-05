@@ -135,9 +135,9 @@ export default async function Home() {
                 {userStats.recentUsers && userStats.recentUsers.length > 0 ? (
                   userStats.recentUsers.map((user: any, index: number) => {
                     const colors = [
-                      "from-blue-500 to-purple-500",
-                      "from-purple-500 to-pink-500",
-                      "from-pink-500 to-orange-500",
+                      "from-cyan-400 to-primary",
+                      "from-purple-500 to-purple-600",
+                      "from-primary to-green-400",
                     ];
 
                     // Use GitHub avatar if available, otherwise show initials
@@ -165,9 +165,9 @@ export default async function Home() {
                   })
                 ) : (
                   <>
-                    <div className="h-7 w-7 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 border-2 border-background" />
-                    <div className="h-7 w-7 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 border-2 border-background" />
-                    <div className="h-7 w-7 rounded-full bg-gradient-to-br from-pink-500 to-orange-500 border-2 border-background" />
+                    <div className="h-7 w-7 rounded-full bg-gradient-to-br from-cyan-400 to-primary border-2 border-background" />
+                    <div className="h-7 w-7 rounded-full bg-gradient-to-br from-primary to-green-400 border-2 border-background" />
+                    <div className="h-7 w-7 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 border-2 border-background" />
                   </>
                 )}
               </div>
@@ -194,7 +194,7 @@ export default async function Home() {
               <GithubIcon className="h-4 w-4" />
               <span>Star on GitHub</span>
               {stars !== null && (
-                <span className="inline-flex items-center justify-center min-w-[24px] h-5 px-1.5 rounded-full bg-foreground text-background text-[11px] font-semibold">
+                <span className="inline-flex items-center justify-center min-w-[24px] h-5 px-1.5 rounded-full bg-primary text-primary-foreground text-[11px] font-semibold">
                   {stars}+
                 </span>
               )}
@@ -208,8 +208,8 @@ export default async function Home() {
         <div className="grid gap-8">
           {/* Feature 1 */}
           <div className="flex items-start gap-6 p-8 rounded-2xl border bg-card">
-            <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-foreground dark:bg-primary flex items-center justify-center">
-              <Layers className="h-6 w-6 text-background dark:text-primary-foreground dark:text-white" />
+            <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-primary flex items-center justify-center">
+              <Layers className="h-6 w-6 text-primary-foreground" />
             </div>
             <div className="space-y-2">
               <h3 className="text-[24px] font-semibold tracking-tight text-foreground">
@@ -224,8 +224,8 @@ export default async function Home() {
 
           {/* Feature 2 */}
           <div className="flex items-start gap-6 p-8 rounded-2xl border bg-card">
-            <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-foreground dark:bg-primary flex items-center justify-center">
-              <Users className="h-6 w-6 text-background dark:text-primary-foreground" />
+            <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-primary flex items-center justify-center">
+              <Users className="h-6 w-6 text-primary-foreground" />
             </div>
             <div className="space-y-2">
               <h3 className="text-[24px] font-semibold tracking-tight text-foreground">
@@ -240,8 +240,8 @@ export default async function Home() {
 
           {/* Feature 3 */}
           <div className="flex items-start gap-6 p-8 rounded-2xl border bg-card">
-            <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-foreground dark:bg-primary flex items-center justify-center">
-              <Zap className="h-6 w-6 text-background dark:text-primary-foreground" />
+            <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-primary flex items-center justify-center">
+              <Zap className="h-6 w-6 text-primary-foreground" />
             </div>
             <div className="space-y-2">
               <h3 className="text-[24px] font-semibold tracking-tight text-foreground">
@@ -256,8 +256,8 @@ export default async function Home() {
 
           {/* Feature 4 */}
           <div className="flex items-start gap-6 p-8 rounded-2xl border bg-card">
-            <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-foreground dark:bg-primary flex items-center justify-center">
-              <Shield className="h-6 w-6 text-background dark:text-primary-foreground" />
+            <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-primary flex items-center justify-center">
+              <Shield className="h-6 w-6 text-primary-foreground" />
             </div>
             <div className="space-y-2">
               <h3 className="text-[24px] font-semibold tracking-tight text-foreground">

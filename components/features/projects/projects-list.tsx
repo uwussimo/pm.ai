@@ -75,11 +75,11 @@ function ProjectCard({ project, onClick, modal }: ProjectCardProps) {
       <CardHeader className="pb-4">
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
-            <CardTitle className="text-[17px] font-semibold tracking-tight line-clamp-1 text-[#1D1D1F] dark:text-white mb-1">
+            <CardTitle className="text-[17px] font-semibold tracking-tight line-clamp-1 text-foreground mb-1">
               {project.name}
             </CardTitle>
             {project.description && (
-              <CardDescription className="text-[15px] line-clamp-2 text-[#86868B]">
+              <CardDescription className="text-[15px] line-clamp-2 text-muted-foreground">
                 {project.description}
               </CardDescription>
             )}
@@ -127,7 +127,7 @@ function ProjectCard({ project, onClick, modal }: ProjectCardProps) {
       </CardHeader>
 
       <CardContent className="pt-0">
-        <div className="flex items-center gap-6 text-[15px] text-[#86868B]">
+        <div className="flex items-center gap-6 text-[15px] text-muted-foreground">
           <div className="flex items-center gap-2">
             <CheckSquare className="h-4 w-4" />
             <span>{project._count.tasks}</span>
@@ -189,10 +189,10 @@ export function ProjectsList() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-[28px] font-semibold tracking-tight text-[#1D1D1F] dark:text-white">
+          <h2 className="text-[28px] font-semibold tracking-tight text-foreground">
             Projects
           </h2>
-          <p className="text-[15px] text-[#86868B] mt-1">
+          <p className="text-[15px] text-muted-foreground mt-1">
             Manage your projects and tasks
           </p>
         </div>
@@ -205,13 +205,13 @@ export function ProjectsList() {
       {!projects || projects.length === 0 ? (
         <Card className="border-dashed border-2 bg-muted/10">
           <CardContent className="flex flex-col items-center justify-center py-20">
-            <div className="rounded-full bg-[#1D1D1F] dark:bg-white p-6 mb-6">
-              <FolderOpen className="h-12 w-12 text-white dark:text-[#1D1D1F]" />
+            <div className="rounded-full bg-primary p-6 mb-6">
+              <FolderOpen className="h-12 w-12 text-primary-foreground" />
             </div>
-            <h3 className="text-[21px] font-semibold mb-2 text-[#1D1D1F] dark:text-white">
+            <h3 className="text-[21px] font-semibold mb-2 text-foreground">
               No projects yet
             </h3>
-            <p className="text-[15px] text-[#86868B] mb-8 text-center max-w-sm">
+            <p className="text-[15px] text-muted-foreground mb-8 text-center max-w-sm">
               Get started by creating your first project. Organize your tasks,
               collaborate with your team, and track progress.
             </p>

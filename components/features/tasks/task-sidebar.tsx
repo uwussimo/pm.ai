@@ -125,7 +125,7 @@ export function TaskSidebar({
         onSuccess: () => {
           setCommentContent("");
         },
-      }
+      },
     );
   };
 
@@ -290,7 +290,7 @@ export function TaskSidebar({
                             return false;
                           }
                         })() &&
-                        "text-destructive font-medium"
+                        "text-destructive font-medium",
                     )}
                   />
                 </div>
@@ -397,7 +397,7 @@ export function TaskSidebar({
 
                     {/* Task Created */}
                     <div className="relative flex gap-3">
-                      <div className="flex items-center justify-center h-6 w-6 rounded-full bg-green-500/10 text-green-600 dark:text-green-400 shrink-0 relative z-10">
+                      <div className="flex items-center justify-center h-6 w-6 rounded-full bg-primary/10 text-primary shrink-0 relative z-10">
                         <CheckCircle2 className="h-3.5 w-3.5" />
                       </div>
                       <div className="flex-1 pt-0.5">
@@ -406,7 +406,7 @@ export function TaskSidebar({
                           <span className="text-foreground font-medium">
                             {format(
                               new Date(task.createdAt),
-                              "MMM d 'at' h:mm a"
+                              "MMM d 'at' h:mm a",
                             )}
                           </span>
                         </p>
@@ -416,7 +416,7 @@ export function TaskSidebar({
                     {/* Comments */}
                     {task.comments.map((comment) => (
                       <div key={comment.id} className="relative flex gap-3">
-                        <div className="flex items-center justify-center h-6 w-6 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 shrink-0 relative z-10">
+                        <div className="flex items-center justify-center h-6 w-6 rounded-full bg-blue-500/10 text-blue-400 shrink-0 relative z-10">
                           <MessageSquare className="h-3.5 w-3.5" />
                         </div>
                         <div className="flex-1 border rounded-lg p-3 space-y-2 bg-card">
@@ -434,7 +434,7 @@ export function TaskSidebar({
                                 <span className="text-xs text-muted-foreground">
                                   {format(
                                     new Date(comment.createdAt),
-                                    "MMM d 'at' h:mm a"
+                                    "MMM d 'at' h:mm a",
                                   )}
                                 </span>
                               </div>
@@ -450,7 +450,7 @@ export function TaskSidebar({
                     {/* Last Updated */}
                     {task.updatedAt !== task.createdAt && (
                       <div className="relative flex gap-3">
-                        <div className="flex items-center justify-center h-6 w-6 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 shrink-0 relative z-10">
+                        <div className="flex items-center justify-center h-6 w-6 rounded-full bg-purple-500/10 text-purple-400 shrink-0 relative z-10">
                           <Edit2 className="h-3.5 w-3.5" />
                         </div>
                         <div className="flex-1 pt-0.5">
@@ -459,7 +459,7 @@ export function TaskSidebar({
                             <span className="text-foreground font-medium">
                               {format(
                                 new Date(task.updatedAt),
-                                "MMM d 'at' h:mm a"
+                                "MMM d 'at' h:mm a",
                               )}
                             </span>
                           </p>

@@ -32,11 +32,11 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
       <div className="container mx-auto px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-[#1D1D1F] dark:bg-white p-2">
-              <ZapIcon className="h-5 w-5 text-white dark:text-[#1D1D1F]" />
+            <div className="rounded-lg bg-primary p-2">
+              <ZapIcon className="h-5 w-5 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-[17px] font-semibold tracking-tight text-[#1D1D1F] dark:text-white">
+              <h1 className="text-[17px] font-semibold tracking-tight text-foreground">
                 PM
               </h1>
             </div>
@@ -66,10 +66,10 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <Link href="/settings">
-              <DropdownMenuItem className="gap-2 cursor-pointer">
-                <Settings className="h-4 w-4" />
-                Settings
-              </DropdownMenuItem>
+                <DropdownMenuItem className="gap-2 cursor-pointer">
+                  <Settings className="h-4 w-4" />
+                  Settings
+                </DropdownMenuItem>
               </Link>
               <DropdownMenuSeparator />
               <DropdownMenuItem
